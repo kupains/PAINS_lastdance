@@ -2,11 +2,41 @@
 
 불펜 투수를 특정 경기에서 기용해도 되는지 판단하기 위해, 등판 단위 성과를 본인 baseline 대비 `하/중/상` 3개 범주로 분류하는 프로젝트입니다.
 
-현재 베이스라인 모델은 하나입니다.
+단일 등판 베이스라인 모델:
 
 ```text
 classification_residual_tertile_xgboost
 ```
+
+## 예측 성능 최적 결과 (다중등판 rolling 타깃)
+
+단일 등판 타깃은 BF≈4에서 ~99% 표본 노이즈라 예측 상한이 막혀 있다(단일등판
+정직한 within-pitcher lift ~1.11). 등판 노이즈를 **forward rolling 평균**으로
+제거하면 예측 가능한 신호가 복원된다.
+
+```text
+model:   classification_rolling_residual_tertile_xgboost
+target:  rolling_fwd{k}_residual_centered  (오늘 포함 향후 k등판 평균 residual, offset 제거)
+```
+
+동일 rolling-origin split, top20_risk_lift:
+
+```text
+단일등판 baseline           1.207
+rolling k=5 (기본/shipped)  1.576   balanced_accuracy 0.411, risk_precision 0.482
+rolling k=10 (최고 성능)    1.828   balanced_accuracy 0.446, risk_precision 0.505
+```
+
+재현:
+
+```bash
+python run_rolling.py --k 5                  # 기본
+python run_rolling.py --k 10 --variant raw   # 최고 lift
+```
+
+정직성 주의: 늘어난 lift의 약 2/3는 pitcher talent/form, 약 1/3만 time-local
+form 신호다. 워크로드 자체 기여는 미미하다. 큰 k일수록 "오늘 기용 결정"이 아니라
+"기량 랭킹"에 가까워진다. 상세: `docs/rolling_target_results.md`.
 
 ## 판단 기준
 

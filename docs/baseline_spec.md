@@ -1,5 +1,10 @@
 # 3범주 분류 베이스라인 명세
 
+> 이 문서는 **단일 등판** 베이스라인 명세다. 예측 성능 최적 결과는 단일 등판
+> 노이즈를 제거한 다중등판 rolling 타깃이며, `docs/rolling_target_results.md`와
+> `run_rolling.py`를 참조. (단일등판 baseline lift 1.207 → rolling k=5 1.576 →
+> k=10 1.828)
+
 ## 목적
 
 등판 직전 시점에서 아래 질문에 답한다.
