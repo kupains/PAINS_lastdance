@@ -300,9 +300,14 @@ def _params_from_row(row: pd.Series) -> dict[str, float | int]:
     }
 
 
-def run(
+def _legacy_run_for_reproduction(
     statcast_dirs: list[Path], stuff_paths: list[Path], output_dir: Path
 ) -> dict[str, object]:
+    """Historical mixed select-and-test implementation.
+
+    Kept only so previously published results remain auditable.  The public
+    ``run`` and CLI below route through the unified development-only selector.
+    """
     started = time.perf_counter()
     data, qualified = make_dataset(statcast_dirs, stuff_paths)
     data = _prepare_data(data)
@@ -411,15 +416,46 @@ def run(
     return result
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Fast staged XGBoost hyperparameter search.")
-    parser.add_argument("--statcast-dir", required=True, nargs="+", type=Path)
-    parser.add_argument("--stuff", required=True, nargs="+", type=Path)
-    parser.add_argument("--output-dir", required=True, type=Path)
-    args = parser.parse_args()
-    result = run(args.statcast_dir, args.stuff, args.output_dir)
-    print(json.dumps(result, indent=2, ensure_ascii=False))
+def run(
+    statcast_dirs: list[Path],
+    stuff_paths: list[Path],
+    output_dir: Path,
+    **selection_options: object,
+) -> dict[str, object]:
+    """Compatibility API for the unified pre-2025 XGBoost selection path."""
+
+    from lib.stuff_cli import load_stuff_data
+    from lib.stuff_selection import run_model_selection
+
+    bundle = load_stuff_data(
+        statcast_paths=statcast_dirs,
+        stuff_paths=stuff_paths,
+        qualification_mode="research",
+    )
+    return run_model_selection(
+        bundle,
+        output_dir=output_dir,
+        models=("ewma", "ridge", "xgboost"),
+        **selection_options,
+    )
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Forward the legacy command name to ``select_models.py``.
+
+    EWMA, Ridge, and XGBoost are the default families for this compatibility
+    entrypoint.  It never evaluates the reserved 2025 outcomes.
+    """
+
+    import sys
+
+    from select_models import main as unified_main
+
+    forwarded = list(sys.argv[1:] if argv is None else argv)
+    if "--models" not in forwarded:
+        forwarded.extend(["--models", "ewma", "ridge", "xgboost"])
+    return unified_main(forwarded)
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

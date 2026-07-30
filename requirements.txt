@@ -4,6 +4,8 @@ scikit-learn>=1.3
 xgboost>=3.0
 optuna>=4.0
 pyarrow>=14.0
+torch>=2.2
+pytest>=8.0
 
 # Data collection
 pybaseball>=2.2

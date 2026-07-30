@@ -8,6 +8,83 @@ from pathlib import Path
 import pandas as pd
 
 
+def _coalesce_columns(
+    frame: pd.DataFrame,
+    aliases: tuple[str, ...],
+) -> pd.Series | None:
+    """Coalesce schema aliases per row instead of selecting one globally."""
+
+    result = pd.Series(pd.NA, index=frame.index, dtype="object")
+    found = False
+    folded = {
+        str(column).casefold(): str(column)
+        for column in frame.columns
+    }
+    used: set[str] = set()
+    for alias in aliases:
+        column = (
+            str(alias)
+            if alias in frame.columns
+            else folded.get(str(alias).casefold())
+        )
+        if column is None or column in used:
+            continue
+        used.add(column)
+        found = True
+        values = frame[column]
+        present = values.notna()
+        if pd.api.types.is_object_dtype(values.dtype) or isinstance(
+            values.dtype, pd.StringDtype
+        ):
+            present &= values.astype("string").str.strip().ne("")
+        result = result.where(result.notna(), values.where(present))
+    return result if found else None
+
+
+def _deduplicate_logs(frame: pd.DataFrame) -> pd.DataFrame:
+    """Deduplicate with row-level game-id/date identity and reject ambiguity."""
+
+    data = frame.copy()
+    if "game_pk" not in data:
+        data["game_pk"] = pd.NA
+    game = pd.to_numeric(data["game_pk"], errors="coerce")
+    data["_has_game_pk"] = game.notna()
+    data["_game_join"] = game.astype("Int64").astype("string").fillna("")
+    identity = pd.Series("", index=data.index, dtype="string")
+    identity.loc[data["_has_game_pk"]] = (
+        data.loc[data["_has_game_pk"], "pitcher"].astype("Int64").astype("string")
+        + "|g|"
+        + data.loc[data["_has_game_pk"], "_game_join"]
+    )
+    identity.loc[~data["_has_game_pk"]] = (
+        data.loc[~data["_has_game_pk"], "pitcher"].astype("Int64").astype("string")
+        + "|d|"
+        + data.loc[~data["_has_game_pk"], "game_date"]
+        .dt.strftime("%Y-%m-%d")
+        .astype("string")
+    )
+    data["_identity"] = identity
+    payload_columns = [
+        column
+        for column in data.columns
+        if column not in {"_has_game_pk", "_game_join", "_identity"}
+    ]
+    distinct = data.drop_duplicates(["_identity", *payload_columns])
+    ambiguous = distinct.duplicated("_identity", keep=False)
+    if ambiguous.any():
+        examples = (
+            distinct.loc[ambiguous, ["pitcher", "game_date", "game_pk"]]
+            .head(5)
+            .to_dict(orient="records")
+        )
+        raise ValueError(f"Ambiguous FanGraphs game-log identities: {examples}")
+    return (
+        distinct.drop_duplicates("_identity", keep="last")
+        .drop(columns=["_has_game_pk", "_game_join", "_identity"])
+        .reset_index(drop=True)
+    )
+
+
 def collect_game_logs(
     outings_path: Path,
     output_path: Path,
@@ -62,17 +139,63 @@ def collect_game_logs(
     if not frames:
         raise RuntimeError("No FanGraphs game logs were collected.")
     combined = pd.concat(frames, ignore_index=True)
-    combined["game_date"] = pd.to_datetime(combined.get("gamedate"), errors="coerce")
+    raw_date = _coalesce_columns(
+        combined, ("game_date", "gamedate", "gameDate", "date", "Date")
+    )
+    if raw_date is None:
+        raise ValueError("FanGraphs game logs do not contain a game date.")
+    date_text = raw_date.astype("string")
+    extracted_date = date_text.str.extract(r"(\d{4}-\d{2}-\d{2})", expand=False)
+    combined["game_date"] = pd.to_datetime(
+        extracted_date.fillna(date_text), errors="coerce"
+    ).dt.normalize()
+    raw_gs = _coalesce_columns(
+        combined,
+        ("GS", "is_starting_pitcher", "is_starter", "starter"),
+    )
+    if raw_gs is None:
+        raise ValueError("FanGraphs game logs do not contain a starter flag.")
+    combined["GS"] = pd.to_numeric(raw_gs, errors="coerce")
+    gs_text = raw_gs.astype("string").str.strip().str.lower()
+    combined.loc[
+        combined["GS"].isna()
+        & gs_text.isin({"true", "t", "yes", "y", "starter", "starting"}),
+        "GS",
+    ] = 1
+    combined.loc[
+        combined["GS"].isna()
+        & gs_text.isin({"false", "f", "no", "n", "reliever", "relief"}),
+        "GS",
+    ] = 0
     combined = combined.loc[
         combined["game_date"].dt.year.between(start_year, end_year)
-        & pd.to_numeric(combined.get("GS"), errors="coerce").eq(1)
+        & combined["GS"].eq(1)
     ].copy()
+    combined["is_starting_pitcher"] = 1
+
+    stuff_values = _coalesce_columns(
+        combined,
+        ("sp_stuff", "stuff_plus", "Stuff+", "StuffPlus", "stuffplus"),
+    )
+    if stuff_values is None:
+        raise ValueError("FanGraphs game logs do not contain a starter Stuff+ column.")
+    combined["sp_stuff"] = pd.to_numeric(stuff_values, errors="coerce")
+    combined["stuff_plus"] = combined["sp_stuff"]
+    game_pk = _coalesce_columns(
+        combined,
+        ("game_pk", "gamePk", "game_id", "game_id_mlb"),
+    )
+    if game_pk is not None:
+        combined["game_pk"] = game_pk
+
     keep = [
-        "pitcher", "fangraphs_id", "game_date", "Team", "Opp", "Pitches", "TBF",
-        "sp_stuff", "sp_location", "sp_pitching", "pb_stuff", "pb_command", "pb_overall",
+        "pitcher", "fangraphs_id", "game_date", "game_pk", "gameid",
+        "GS", "is_starting_pitcher", "Team", "Opp", "Pitches", "TBF",
+        "sp_stuff", "stuff_plus", "sp_location", "sp_pitching",
+        "pb_stuff", "pb_command", "pb_overall",
     ]
     combined = combined[[column for column in keep if column in combined.columns]]
-    combined = combined.drop_duplicates(["pitcher", "game_date"], keep="last")
+    combined = _deduplicate_logs(combined)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     combined.to_parquet(output_path, index=False)
     return combined
