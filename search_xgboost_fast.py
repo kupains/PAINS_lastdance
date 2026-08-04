@@ -301,7 +301,10 @@ def _params_from_row(row: pd.Series) -> dict[str, float | int]:
 
 
 def run(
-    statcast_dirs: list[Path], stuff_paths: list[Path], output_dir: Path
+    statcast_dirs: list[Path],
+    stuff_paths: list[Path],
+    output_dir: Path,
+    official_stats_path: Path | None = None,
 ) -> dict[str, object]:
     started = time.perf_counter()
     data, qualified = make_dataset(statcast_dirs, stuff_paths)
@@ -371,7 +374,39 @@ def run(
     test_predictions.to_parquet(output_dir / "locked_xgboost_2025_predictions.parquet", index=False)
     ridge_predictions.to_parquet(output_dir / "ridge_benchmark_2025_predictions.parquet", index=False)
     comparison, agreement = _agreement_summary(test_predictions, ridge_predictions)
+    if official_stats_path is not None:
+        names = (
+            pd.read_parquet(official_stats_path)[["player_id", "name"]]
+            .drop_duplicates("player_id")
+            .rename(columns={"player_id": "pitcher", "name": "pitcher_name"})
+        )
+        comparison = comparison.merge(names, on="pitcher", how="left", validate="many_to_one")
     comparison.to_parquet(output_dir / "tuned_xgboost_vs_ridge_2025.parquet", index=False)
+    latest = (
+        comparison.sort_values(["pitcher", "game_date"])
+        .groupby("pitcher", as_index=False)
+        .tail(1)
+        .sort_values("pitcher_name" if "pitcher_name" in comparison else "pitcher")
+    )
+    if "pitcher_name" not in latest:
+        latest["pitcher_name"] = latest["pitcher"].astype(str)
+    labels = {0: "Low", 1: "Middle", 2: "High"}
+    latest["true_label"] = latest["true_class"].map(labels)
+    latest["tuned_xgboost_label"] = latest["tuned_xgboost_class"].map(labels)
+    latest["ridge_label"] = latest["ridge_class"].map(labels)
+    latest["tuned_xgboost_absolute_error"] = (
+        latest["tuned_xgboost_score"] - latest["target_y"]
+    ).abs()
+    latest["ridge_absolute_error"] = (latest["ridge_score"] - latest["target_y"]).abs()
+    latest_columns = [
+        "pitcher", "pitcher_name", "game_date", "target_y", "q33", "q67",
+        "true_class", "true_label", "tuned_xgboost_score", "tuned_xgboost_class",
+        "tuned_xgboost_label", "tuned_xgboost_absolute_error", "ridge_score",
+        "ridge_class", "ridge_label", "ridge_absolute_error", "models_agree",
+    ]
+    latest[latest_columns].to_csv(
+        output_dir / "latest_player_predictions_2025.csv", index=False, encoding="utf-8-sig"
+    )
 
     result: dict[str, object] = {
         "search_guard": "all hyperparameter selection uses rows through 2024 only",
@@ -416,8 +451,12 @@ def main() -> None:
     parser.add_argument("--statcast-dir", required=True, nargs="+", type=Path)
     parser.add_argument("--stuff", required=True, nargs="+", type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
+    parser.add_argument(
+        "--official-stats", type=Path,
+        help="Optional official stats parquet used to attach pitcher names to outputs.",
+    )
     args = parser.parse_args()
-    result = run(args.statcast_dir, args.stuff, args.output_dir)
+    result = run(args.statcast_dir, args.stuff, args.output_dir, args.official_stats)
     print(json.dumps(result, indent=2, ensure_ascii=False))
 
 

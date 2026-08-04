@@ -1,0 +1,1556 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-08-04T02:00:06.670057+00:00",
+  "command": [
+    "collect_mlb_stuff_dataset.py"
+  ],
+  "git_commit": "7eb80cd95ebf13480c8a38dbbe74a5af752bf58c",
+  "python": "3.12.10",
+  "packages": {
+    "pandas": "2.2.3",
+    "pyarrow": "24.0.0",
+    "pybaseball": "2.2.7",
+    "fungo": "2.0.0"
+  },
+  "selection": {
+    "source": "https://statsapi.mlb.com/api/v1/stats",
+    "years": [
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "minimum_official_games_started_each_year": 20,
+    "candidate_count": 21,
+    "candidates": [
+      {
+        "player_id": 450203,
+        "name": "Charlie Morton",
+        "games_started_2021": 33.0,
+        "games_started_2022": 31.0,
+        "games_started_2023": 30.0,
+        "games_started_2024": 30.0,
+        "games_started_2025": 27.0
+      },
+      {
+        "player_id": 542881,
+        "name": "Tyler Anderson",
+        "games_started_2021": 31.0,
+        "games_started_2022": 28.0,
+        "games_started_2023": 25.0,
+        "games_started_2024": 31.0,
+        "games_started_2025": 26.0
+      },
+      {
+        "player_id": 543135,
+        "name": "Nathan Eovaldi",
+        "games_started_2021": 32.0,
+        "games_started_2022": 20.0,
+        "games_started_2023": 25.0,
+        "games_started_2024": 29.0,
+        "games_started_2025": 22.0
+      },
+      {
+        "player_id": 543243,
+        "name": "Sonny Gray",
+        "games_started_2021": 26.0,
+        "games_started_2022": 24.0,
+        "games_started_2023": 32.0,
+        "games_started_2024": 28.0,
+        "games_started_2025": 32.0
+      },
+      {
+        "player_id": 554430,
+        "name": "Zack Wheeler",
+        "games_started_2021": 32.0,
+        "games_started_2022": 26.0,
+        "games_started_2023": 32.0,
+        "games_started_2024": 32.0,
+        "games_started_2025": 24.0
+      },
+      {
+        "player_id": 571578,
+        "name": "Patrick Corbin",
+        "games_started_2021": 31.0,
+        "games_started_2022": 31.0,
+        "games_started_2023": 32.0,
+        "games_started_2024": 32.0,
+        "games_started_2025": 30.0
+      },
+      {
+        "player_id": 579328,
+        "name": "Yusei Kikuchi",
+        "games_started_2021": 29.0,
+        "games_started_2022": 20.0,
+        "games_started_2023": 32.0,
+        "games_started_2024": 32.0,
+        "games_started_2025": 33.0
+      },
+      {
+        "player_id": 592332,
+        "name": "Kevin Gausman",
+        "games_started_2021": 33.0,
+        "games_started_2022": 31.0,
+        "games_started_2023": 31.0,
+        "games_started_2024": 31.0,
+        "games_started_2025": 32.0
+      },
+      {
+        "player_id": 592791,
+        "name": "Jameson Taillon",
+        "games_started_2021": 29.0,
+        "games_started_2022": 32.0,
+        "games_started_2023": 29.0,
+        "games_started_2024": 28.0,
+        "games_started_2025": 23.0
+      },
+      {
+        "player_id": 605135,
+        "name": "Chris Bassitt",
+        "games_started_2021": 27.0,
+        "games_started_2022": 30.0,
+        "games_started_2023": 33.0,
+        "games_started_2024": 31.0,
+        "games_started_2025": 31.0
+      },
+      {
+        "player_id": 607536,
+        "name": "Kyle Freeland",
+        "games_started_2021": 23.0,
+        "games_started_2022": 31.0,
+        "games_started_2023": 29.0,
+        "games_started_2024": 21.0,
+        "games_started_2025": 31.0
+      },
+      {
+        "player_id": 608379,
+        "name": "Michael Wacha",
+        "games_started_2021": 23.0,
+        "games_started_2022": 23.0,
+        "games_started_2023": 24.0,
+        "games_started_2024": 29.0,
+        "games_started_2025": 31.0
+      },
+      {
+        "player_id": 621244,
+        "name": "José Berríos",
+        "games_started_2021": 32.0,
+        "games_started_2022": 32.0,
+        "games_started_2023": 32.0,
+        "games_started_2024": 32.0,
+        "games_started_2025": 30.0
+      },
+      {
+        "player_id": 622491,
+        "name": "Luis Castillo",
+        "games_started_2021": 33.0,
+        "games_started_2022": 25.0,
+        "games_started_2023": 33.0,
+        "games_started_2024": 30.0,
+        "games_started_2025": 32.0
+      },
+      {
+        "player_id": 656302,
+        "name": "Dylan Cease",
+        "games_started_2021": 32.0,
+        "games_started_2022": 32.0,
+        "games_started_2023": 33.0,
+        "games_started_2024": 33.0,
+        "games_started_2025": 32.0
+      },
+      {
+        "player_id": 656605,
+        "name": "Mitch Keller",
+        "games_started_2021": 23.0,
+        "games_started_2022": 29.0,
+        "games_started_2023": 32.0,
+        "games_started_2024": 31.0,
+        "games_started_2025": 32.0
+      },
+      {
+        "player_id": 657277,
+        "name": "Logan Webb",
+        "games_started_2021": 26.0,
+        "games_started_2022": 32.0,
+        "games_started_2023": 33.0,
+        "games_started_2024": 33.0,
+        "games_started_2025": 34.0
+      },
+      {
+        "player_id": 663903,
+        "name": "Brady Singer",
+        "games_started_2021": 27.0,
+        "games_started_2022": 24.0,
+        "games_started_2023": 29.0,
+        "games_started_2024": 32.0,
+        "games_started_2025": 32.0
+      },
+      {
+        "player_id": 664285,
+        "name": "Framber Valdez",
+        "games_started_2021": 22.0,
+        "games_started_2022": 31.0,
+        "games_started_2023": 31.0,
+        "games_started_2024": 28.0,
+        "games_started_2025": 31.0
+      },
+      {
+        "player_id": 668678,
+        "name": "Zac Gallen",
+        "games_started_2021": 23.0,
+        "games_started_2022": 31.0,
+        "games_started_2023": 34.0,
+        "games_started_2024": 28.0,
+        "games_started_2025": 33.0
+      },
+      {
+        "player_id": 669302,
+        "name": "Logan Gilbert",
+        "games_started_2021": 24.0,
+        "games_started_2022": 32.0,
+        "games_started_2023": 32.0,
+        "games_started_2024": 33.0,
+        "games_started_2025": 25.0
+      }
+    ],
+    "raw_responses": [
+      {
+        "path": "data/reproducible_mlb_stuff/raw_mlb_stats/mlb_pitching_2021.json",
+        "bytes": 1543926,
+        "sha256": "c81d1f8c816c454b05e768a555d7d19dd02bb5512e3ef9aa12b5e1e3d9fd7a43"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/raw_mlb_stats/mlb_pitching_2022.json",
+        "bytes": 1479606,
+        "sha256": "b5df316742396824ad0be8890976d6f1b3749fb5bd4adaba4fe9c032368ba4dc"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/raw_mlb_stats/mlb_pitching_2023.json",
+        "bytes": 1466356,
+        "sha256": "fb6800091c17d65be56e19f2c5f0a18519d83c5b5bea4ba36fbae58d9a022b71"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/raw_mlb_stats/mlb_pitching_2024.json",
+        "bytes": 1452449,
+        "sha256": "1efd93c5f6f865e10aa755de9ec0a0168340c3535e2c49610cdfa04d01faf33a"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/raw_mlb_stats/mlb_pitching_2025.json",
+        "bytes": 1482903,
+        "sha256": "984bccc46e7c697e12db65ba82408ee14de4f35fe3b584caa703b1788c7a7180"
+      }
+    ]
+  },
+  "statcast": {
+    "collector": "pybaseball.statcast_pitcher",
+    "requested_ranges": [
+      "2020-03-01..2020-10-31",
+      "2021-03-01..2025-10-31"
+    ],
+    "files": [
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_450203_2020-03-01_2020-10-31.parquet",
+        "bytes": 224867,
+        "sha256": "36f3cbd45c5883bcd799150242be5734efc03c20ad98d920af3bca179208abdf",
+        "rows": 1008,
+        "pitcher_ids": [
+          450203
+        ],
+        "min_game_date": "2020-03-02",
+        "max_game_date": "2020-10-23",
+        "unique_games": 14
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_542881_2020-03-01_2020-10-31.parquet",
+        "bytes": 220908,
+        "sha256": "6e84783ce263af4bd00e461ec1bcbde8996c36e94ac890a05e392ce719d7e19d",
+        "rows": 968,
+        "pitcher_ids": [
+          542881
+        ],
+        "min_game_date": "2020-07-20",
+        "max_game_date": "2020-09-25",
+        "unique_games": 14
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_543135_2020-03-01_2020-10-31.parquet",
+        "bytes": 189543,
+        "sha256": "bad9340c95eb234d8482d8c929b2abb06a5c06cd2ea3be01a9e72d07e8facf67",
+        "rows": 788,
+        "pitcher_ids": [
+          543135
+        ],
+        "min_game_date": "2020-03-01",
+        "max_game_date": "2020-09-23",
+        "unique_games": 11
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_543243_2020-03-01_2020-10-31.parquet",
+        "bytes": 218229,
+        "sha256": "212fc89188b97dae6d1882812b0f3a849b767bae727dc6dc93f50b558a424cfe",
+        "rows": 1018,
+        "pitcher_ids": [
+          543243
+        ],
+        "min_game_date": "2020-03-02",
+        "max_game_date": "2020-09-27",
+        "unique_games": 13
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_554430_2020-03-01_2020-10-31.parquet",
+        "bytes": 248956,
+        "sha256": "40582c729bb1682d07d27ab17925f5eeccc8191e80abf95cdfd07647429dd49d",
+        "rows": 1223,
+        "pitcher_ids": [
+          554430
+        ],
+        "min_game_date": "2020-03-05",
+        "max_game_date": "2020-09-26",
+        "unique_games": 14
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_571578_2020-03-01_2020-10-31.parquet",
+        "bytes": 243780,
+        "sha256": "4b5a15476d5a631a211119d6fe77a9e9dacebe2934122b09834d1d95dac4e8a9",
+        "rows": 1185,
+        "pitcher_ids": [
+          571578
+        ],
+        "min_game_date": "2020-03-05",
+        "max_game_date": "2020-09-24",
+        "unique_games": 14
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_579328_2020-03-01_2020-10-31.parquet",
+        "bytes": 193603,
+        "sha256": "f8a2d4e550f80c43937caaf0b87399a40eb66915d61209f84e0dc420645bc7ad",
+        "rows": 822,
+        "pitcher_ids": [
+          579328
+        ],
+        "min_game_date": "2020-03-05",
+        "max_game_date": "2020-09-25",
+        "unique_games": 10
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_592332_2020-03-01_2020-10-31.parquet",
+        "bytes": 221341,
+        "sha256": "759943136f3873c2342c22525fbf4084ccf8e68d90c90e16bc993e76bda751c9",
+        "rows": 1040,
+        "pitcher_ids": [
+          592332
+        ],
+        "min_game_date": "2020-03-01",
+        "max_game_date": "2020-09-27",
+        "unique_games": 16
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_592791_2020-03-01_2020-10-31.parquet",
+        "bytes": 53438,
+        "sha256": "f3d9b0117c236c97183a3d5f44a45afe09c2af8223b87b930236b25f29eb7dd4",
+        "rows": 0,
+        "pitcher_ids": [],
+        "min_game_date": null,
+        "max_game_date": null,
+        "unique_games": 0
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_605135_2020-03-01_2020-10-31.parquet",
+        "bytes": 248591,
+        "sha256": "8a505e680da495899a87ac4f724ad8001dc2cc662e9d2d412edf26949159f2c5",
+        "rows": 1210,
+        "pitcher_ids": [
+          605135
+        ],
+        "min_game_date": "2020-03-03",
+        "max_game_date": "2020-10-05",
+        "unique_games": 16
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_607536_2020-03-01_2020-10-31.parquet",
+        "bytes": 248825,
+        "sha256": "9dcfb4c6a93a38dd18b21c3088528d10e5a2f231c328c0ad5b47df6c7c498d54",
+        "rows": 1177,
+        "pitcher_ids": [
+          607536
+        ],
+        "min_game_date": "2020-03-08",
+        "max_game_date": "2020-09-27",
+        "unique_games": 14
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_608379_2020-03-01_2020-10-31.parquet",
+        "bytes": 173880,
+        "sha256": "dec870927dd0c8378c5b65bfcf76941ab12f9898676e871ac0bab6569dcf3b19",
+        "rows": 664,
+        "pitcher_ids": [
+          608379
+        ],
+        "min_game_date": "2020-03-01",
+        "max_game_date": "2020-09-23",
+        "unique_games": 10
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_621244_2020-03-01_2020-10-31.parquet",
+        "bytes": 246839,
+        "sha256": "bc17fc47efb7e003f3777ea31f9f9fc373102dc865f4bb66f1cd2d4d00a3cd0c",
+        "rows": 1209,
+        "pitcher_ids": [
+          621244
+        ],
+        "min_game_date": "2020-03-11",
+        "max_game_date": "2020-09-30",
+        "unique_games": 14
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_622491_2020-03-01_2020-10-31.parquet",
+        "bytes": 255810,
+        "sha256": "eb4ec1196f969efbef2c98cb93573e493b5fd7ecd6cb1329bf8f9e381fcb64d0",
+        "rows": 1313,
+        "pitcher_ids": [
+          622491
+        ],
+        "min_game_date": "2020-03-05",
+        "max_game_date": "2020-10-01",
+        "unique_games": 15
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_656302_2020-03-01_2020-10-31.parquet",
+        "bytes": 239108,
+        "sha256": "56c7a88bb3442d5940d7748e182286297874187034d0e8f37a34853f72403a4d",
+        "rows": 1162,
+        "pitcher_ids": [
+          656302
+        ],
+        "min_game_date": "2020-03-04",
+        "max_game_date": "2020-09-30",
+        "unique_games": 15
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_656605_2020-03-01_2020-10-31.parquet",
+        "bytes": 136685,
+        "sha256": "840b64081796fb91b64ae60a982a1da4c22133bfab0aaedab9a56a19826f6c8b",
+        "rows": 430,
+        "pitcher_ids": [
+          656605
+        ],
+        "min_game_date": "2020-03-02",
+        "max_game_date": "2020-09-25",
+        "unique_games": 7
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_657277_2020-03-01_2020-10-31.parquet",
+        "bytes": 225659,
+        "sha256": "f69a933982e87d84cff54b654f05d9d185795884d094c00893f7ed4d66c5f343",
+        "rows": 1022,
+        "pitcher_ids": [
+          657277
+        ],
+        "min_game_date": "2020-03-03",
+        "max_game_date": "2020-09-27",
+        "unique_games": 14
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_663903_2020-03-01_2020-10-31.parquet",
+        "bytes": 230036,
+        "sha256": "1c6642357b7a72aa047ef9c3cc3099b3a35541f3f21e3fb23a94b7be866160bb",
+        "rows": 1102,
+        "pitcher_ids": [
+          663903
+        ],
+        "min_game_date": "2020-03-01",
+        "max_game_date": "2020-09-27",
+        "unique_games": 14
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_664285_2020-03-01_2020-10-31.parquet",
+        "bytes": 281298,
+        "sha256": "43b957de1d987c6413d98a20fc04f02c7064510ff6a39c0688afd540d99eaffc",
+        "rows": 1448,
+        "pitcher_ids": [
+          664285
+        ],
+        "min_game_date": "2020-03-05",
+        "max_game_date": "2020-10-16",
+        "unique_games": 17
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_668678_2020-03-01_2020-10-31.parquet",
+        "bytes": 239391,
+        "sha256": "40ef67458fb23c938af2f690ac4b763f68e049462fe8489ef15fd45ca1cd95b1",
+        "rows": 1167,
+        "pitcher_ids": [
+          668678
+        ],
+        "min_game_date": "2020-03-01",
+        "max_game_date": "2020-09-25",
+        "unique_games": 14
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020/statcast_pitcher_669302_2020-03-01_2020-10-31.parquet",
+        "bytes": 66624,
+        "sha256": "fdca8b1134d64ed130f17a233ddcf7e549033de3f2568b6dc7768816dabdcb87",
+        "rows": 13,
+        "pitcher_ids": [
+          669302
+        ],
+        "min_game_date": "2020-03-10",
+        "max_game_date": "2020-03-10",
+        "unique_games": 1
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_450203_2021-03-01_2025-10-31.parquet",
+        "bytes": 2190463,
+        "sha256": "26526c9c081b773f2382ffbcd1dcb818599863663c8e2ab30b89ad24cb0f18a4",
+        "rows": 14972,
+        "pitcher_ids": [
+          450203
+        ],
+        "min_game_date": "2021-03-07",
+        "max_game_date": "2025-09-28",
+        "unique_games": 178
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_542881_2021-03-01_2025-10-31.parquet",
+        "bytes": 2068701,
+        "sha256": "5c753318d45325e0154b0869dd62a9ccd688e6687161b555d8bb87aef638afb0",
+        "rows": 13929,
+        "pitcher_ids": [
+          542881
+        ],
+        "min_game_date": "2021-03-04",
+        "max_game_date": "2025-08-29",
+        "unique_games": 166
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_543135_2021-03-01_2025-10-31.parquet",
+        "bytes": 1946213,
+        "sha256": "3fa6d74cea91dd6bc098be448963d99b4c98b14551d735deef185470773cf695",
+        "rows": 13017,
+        "pitcher_ids": [
+          543135
+        ],
+        "min_game_date": "2021-03-14",
+        "max_game_date": "2025-08-22",
+        "unique_games": 157
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_543243_2021-03-01_2025-10-31.parquet",
+        "bytes": 1974570,
+        "sha256": "9f4fbffb70f0fe6a565c55b9733400902f389e9d60154ee82448cb0b7135829c",
+        "rows": 12819,
+        "pitcher_ids": [
+          543243
+        ],
+        "min_game_date": "2021-03-04",
+        "max_game_date": "2025-09-24",
+        "unique_games": 155
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_554430_2021-03-01_2025-10-31.parquet",
+        "bytes": 2400488,
+        "sha256": "3af42c2b75ce4458682d1ddfda7d4385bd207d38b9a0a2c38178c05bfc4018e1",
+        "rows": 16168,
+        "pitcher_ids": [
+          554430
+        ],
+        "min_game_date": "2021-03-02",
+        "max_game_date": "2025-08-15",
+        "unique_games": 176
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_571578_2021-03-01_2025-10-31.parquet",
+        "bytes": 2176935,
+        "sha256": "b5481e192db764c6b8aaaef59202d384e7a9df28ee768a150214bbe12ab2cd1a",
+        "rows": 14416,
+        "pitcher_ids": [
+          571578
+        ],
+        "min_game_date": "2021-03-06",
+        "max_game_date": "2025-09-28",
+        "unique_games": 173
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_579328_2021-03-01_2025-10-31.parquet",
+        "bytes": 2153635,
+        "sha256": "e2ceba823d73b0c92286c035096a916af3fdb914913b31dc9919a4cc3719c662",
+        "rows": 14259,
+        "pitcher_ids": [
+          579328
+        ],
+        "min_game_date": "2021-03-02",
+        "max_game_date": "2025-09-24",
+        "unique_games": 178
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_592332_2021-03-01_2025-10-31.parquet",
+        "bytes": 2402714,
+        "sha256": "f745b9d4f99a6cd2f9a71df187e21b91675f3d389c11a45f620e279af2b79a94",
+        "rows": 16156,
+        "pitcher_ids": [
+          592332
+        ],
+        "min_game_date": "2021-03-12",
+        "max_game_date": "2025-10-31",
+        "unique_games": 180
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_592791_2021-03-01_2025-10-31.parquet",
+        "bytes": 1937489,
+        "sha256": "8566557089f7340d50fed953a4ba65f073697c7a26aea97fd47f23052c126d5b",
+        "rows": 12933,
+        "pitcher_ids": [
+          592791
+        ],
+        "min_game_date": "2021-03-01",
+        "max_game_date": "2025-10-08",
+        "unique_games": 160
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_605135_2021-03-01_2025-10-31.parquet",
+        "bytes": 2346108,
+        "sha256": "2175c3fd566417cf188b566566058a82cd85126b5a841edfd342c7962679714d",
+        "rows": 15633,
+        "pitcher_ids": [
+          605135
+        ],
+        "min_game_date": "2021-03-10",
+        "max_game_date": "2025-10-31",
+        "unique_games": 181
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_607536_2021-03-01_2025-10-31.parquet",
+        "bytes": 1866732,
+        "sha256": "fe0c023c0a602eba006a14289f03c475a6ad4d6cce704de973bff47907ac08b1",
+        "rows": 12216,
+        "pitcher_ids": [
+          607536
+        ],
+        "min_game_date": "2021-03-08",
+        "max_game_date": "2025-09-27",
+        "unique_games": 154
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_608379_2021-03-01_2025-10-31.parquet",
+        "bytes": 1889796,
+        "sha256": "22f1f3c611201ebf139527cd0040ed18b809426e3833dac7e6a3b36b1af21747",
+        "rows": 12451,
+        "pitcher_ids": [
+          608379
+        ],
+        "min_game_date": "2021-03-02",
+        "max_game_date": "2025-09-27",
+        "unique_games": 160
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_621244_2021-03-01_2025-10-31.parquet",
+        "bytes": 2287981,
+        "sha256": "0adaad7ffd4b3edb1fe7b582874d0a1811260de435f0aa3745aec6fb943ac1a7",
+        "rows": 15364,
+        "pitcher_ids": [
+          621244
+        ],
+        "min_game_date": "2021-03-03",
+        "max_game_date": "2025-09-24",
+        "unique_games": 181
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_622491_2021-03-01_2025-10-31.parquet",
+        "bytes": 2323809,
+        "sha256": "a693b9c9f75b6e542db6f1f272d05c17a082833705283cce84fffcdfd140f7f9",
+        "rows": 15811,
+        "pitcher_ids": [
+          622491
+        ],
+        "min_game_date": "2021-03-12",
+        "max_game_date": "2025-10-16",
+        "unique_games": 176
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_656302_2021-03-01_2025-10-31.parquet",
+        "bytes": 2443105,
+        "sha256": "996e55043463b8e6013d76537d68d19d7fbf3712749439b9b1befb7e1624035d",
+        "rows": 16671,
+        "pitcher_ids": [
+          656302
+        ],
+        "min_game_date": "2021-03-15",
+        "max_game_date": "2025-10-01",
+        "unique_games": 186
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_656605_2021-03-01_2025-10-31.parquet",
+        "bytes": 2178424,
+        "sha256": "c9665818bc8aa275390840b71f48ab573e52796f40a5d2613cf9035d99e0a7a4",
+        "rows": 14441,
+        "pitcher_ids": [
+          656605
+        ],
+        "min_game_date": "2021-03-01",
+        "max_game_date": "2025-09-26",
+        "unique_games": 172
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_657277_2021-03-01_2025-10-31.parquet",
+        "bytes": 2349932,
+        "sha256": "d5ee4f24cb2887bb72c3e38a1c859b028ed958516701ea3c433f18b014916f04",
+        "rows": 16007,
+        "pitcher_ids": [
+          657277
+        ],
+        "min_game_date": "2021-03-02",
+        "max_game_date": "2025-09-28",
+        "unique_games": 185
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_663903_2021-03-01_2025-10-31.parquet",
+        "bytes": 2072690,
+        "sha256": "b3efee1883d79437bd7582cd7806990053fb41a9d0250075483e22241560b0d8",
+        "rows": 13913,
+        "pitcher_ids": [
+          663903
+        ],
+        "min_game_date": "2021-03-08",
+        "max_game_date": "2025-09-28",
+        "unique_games": 169
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_664285_2021-03-01_2025-10-31.parquet",
+        "bytes": 2273328,
+        "sha256": "e8dd06e1803cd1d8a541b2906b4fadd4c7e58957d64b531473bc91c90b43dbc7",
+        "rows": 15309,
+        "pitcher_ids": [
+          664285
+        ],
+        "min_game_date": "2021-03-02",
+        "max_game_date": "2025-09-25",
+        "unique_games": 171
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_668678_2021-03-01_2025-10-31.parquet",
+        "bytes": 2282781,
+        "sha256": "6993fb5210640a68bc1a8ecbae56cf3ac165d0f07aaf4be9894c232565742b13",
+        "rows": 15266,
+        "pitcher_ids": [
+          668678
+        ],
+        "min_game_date": "2021-03-06",
+        "max_game_date": "2025-09-26",
+        "unique_games": 172
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025/statcast_pitcher_669302_2021-03-01_2025-10-31.parquet",
+        "bytes": 2124593,
+        "sha256": "b87013651d34f9f52d92b9ee1ba0f966d534ebfb3e383a4776cd6d6cb6ece847",
+        "rows": 14266,
+        "pitcher_ids": [
+          669302
+        ],
+        "min_game_date": "2021-03-07",
+        "max_game_date": "2025-10-19",
+        "unique_games": 170
+      }
+    ]
+  },
+  "fangraphs": {
+    "collector": "fungo.fangraphs.get_game_log(position=P)",
+    "cache_directory": "data/reproducible_mlb_stuff/fangraphs_game_logs",
+    "files": [
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_stuff_mlb_stable_starters_2020_2025.parquet",
+        "bytes": 214490,
+        "sha256": "4102ca51c37d5a1a4b54957fd652a494f0bb6a2be3b84ff3e94518f906e212c0",
+        "rows": 3284
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_stuff_mlb_stable_starters_2020.parquet",
+        "bytes": 20731,
+        "sha256": "7f5952db11af7c44e42af4d34c7b157c7f70cdb9b642422d942dd67d8622defc",
+        "rows": 198
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_stuff_mlb_stable_starters_2021_2025.parquet",
+        "bytes": 202322,
+        "sha256": "2aba1dd38df2a9d8eae705547f435927093b074b428e6d75e3bb8d2cb14a0111",
+        "rows": 3086
+      }
+    ],
+    "raw_responses": [
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_10310_2020.json",
+        "bytes": 84089,
+        "sha256": "0a5ebf1887d5bf696281be15bd26c6e2013f676d0cb0a398c98196cda678ad7b"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_10310_2021.json",
+        "bytes": 224890,
+        "sha256": "5f1321bb9ad20a9a2aa643e6b54f88b88945c9c8644ae2f57b993acb1d986df9"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_10310_2022.json",
+        "bytes": 180840,
+        "sha256": "80c9b72beee0bc9b96fd774379dc4c1887e48725698f8e0593dbf4fc38a1b751"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_10310_2023.json",
+        "bytes": 241401,
+        "sha256": "9f56561e78f1cad98552386a44534c32e8261bcd5123cc246e9a7082ca604222"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_10310_2024.json",
+        "bytes": 257677,
+        "sha256": "bf940e0607741491e2bcf900c6be278a83c285197b2b7f258e18bf6ca8cca15d"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_10310_2025.json",
+        "bytes": 203732,
+        "sha256": "a7e632a451a0c614b65386b8717b378ea3020ea3086292ce043e21a1a6e678e7"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_11674_2020.json",
+        "bytes": 110,
+        "sha256": "fb1e7ffdf5f8b7c8b67854d83711501c873075354a5b0e49efa5583dee655587"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_11674_2021.json",
+        "bytes": 210124,
+        "sha256": "454a228e5aeed2960e42d8a0ec44f39fc99ad4532e8166d689a29d7dd9facf69"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_11674_2022.json",
+        "bytes": 251936,
+        "sha256": "1ba46af977796fd8e17512f9b209e344e39beaad4df34b5490fcdca19886d479"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_11674_2023.json",
+        "bytes": 242966,
+        "sha256": "a12e2cfd1806c69051b39249dfa32527a013eee3c6aef2754bec7252b0a1eeef"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_11674_2024.json",
+        "bytes": 233014,
+        "sha256": "8f7313e09ee18c42a14371b874a0e37fdb33068f978da0e3e8f1405af266b21b"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_11674_2025.json",
+        "bytes": 194962,
+        "sha256": "d26dabf3e9fca1e9948c446780fb03aa254cc43e9f5e55285a0bd3a0e944e2e0"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_12304_2020.json",
+        "bytes": 88646,
+        "sha256": "61c868700a113722b292c63da8956da5743634a2ad76544189d9efd65dde36b8"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_12304_2021.json",
+        "bytes": 214374,
+        "sha256": "f9d2892a6a3071981ce09e56dbcd556fb105218b6fb972fcc735047a690a3def"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_12304_2022.json",
+        "bytes": 242616,
+        "sha256": "39197608b67ce476f2b1c05e817fe701d24d5f56a87a4dee6d2ae3c63f0b1418"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_12304_2023.json",
+        "bytes": 292569,
+        "sha256": "5c753e8fd0e8ea9bca2a034dbf80f1c62984fddd57b4c814797445391bbcbfbb"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_12304_2024.json",
+        "bytes": 283443,
+        "sha256": "7f6c22d89e49c0301e89cb62ad55108cd7e3a89fc303bb578bf61477ec1ecf03"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_12304_2025.json",
+        "bytes": 279503,
+        "sha256": "fd13524e67125ad00a1fa051f9360ae2fdd6597e2328107ee18222f2f65359d2"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_12768_2020.json",
+        "bytes": 80747,
+        "sha256": "6a8ad5b956cf43f3d972dad7cfcc60af6357d8b135dcc39453d5e5940d2690b2"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_12768_2021.json",
+        "bytes": 195508,
+        "sha256": "194213d70ae05d75fb2776b88e1b858c7852bd20cd59a4a2d08bcd2ede780b26"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_12768_2022.json",
+        "bytes": 174260,
+        "sha256": "d98758f80d8a66ff607f584c0fb03233dddfb014f3a9b55ed3d0dadeac27ad44"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_12768_2023.json",
+        "bytes": 260413,
+        "sha256": "67b44baff12a4eb91bc59af35a113d54c15704bf273e7d595f36051da3951084"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_12768_2024.json",
+        "bytes": 234512,
+        "sha256": "723fcccea56931936c6e2a8d3fd4d178c4871ef72ba5fa3bfb1b77adf0c999f2"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_12768_2025.json",
+        "bytes": 272577,
+        "sha256": "3a71f7e2d7591fd1bf1153955dcf6ff3ce9ec3be20fdf4a55c984c9013a08bdd"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_12880_2020.json",
+        "bytes": 87892,
+        "sha256": "7a95a908cd5a3462b5e885f69533b8ea6b2a515e02711ebfa32abaa944f0b8be"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_12880_2021.json",
+        "bytes": 205715,
+        "sha256": "2f0bfccc928d3b307ed5a43e2a840c6c7f077017264b7c0f6dfe2ebf22266152"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_12880_2022.json",
+        "bytes": 194644,
+        "sha256": "1bae24b3466b59be212be3e6e293fc84c53172c6b51f7836ecb900ecc8793af6"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_12880_2023.json",
+        "bytes": 187378,
+        "sha256": "f341b9942f80b95bcd264e07622f31b8b72ad27fadbd1a9617a9fd48b42ff3f9"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_12880_2024.json",
+        "bytes": 218964,
+        "sha256": "ef88aa7dacce434aeb8011755eb43e5ed0717971ec30f3c0e276eeb73ca943ea"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_12880_2025.json",
+        "bytes": 195571,
+        "sha256": "48eb636fc3230148a83ff974783e72ae6385bbe88e0ce448e4772fa71ec730cf"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_14078_2020.json",
+        "bytes": 56188,
+        "sha256": "929cad1dff30acd5421d8a942e3d0d900ee89d50a445e4edc79aee4e1a7d21f0"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_14078_2021.json",
+        "bytes": 182152,
+        "sha256": "2b40539e250b46e85a422fe4597e1840df49929236deed8ac88a0e012c921701"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_14078_2022.json",
+        "bytes": 161526,
+        "sha256": "67cd944ee07287e9713eade3c0545daed3a29bb12da69f4ac56295f0a61aeb1d"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_14078_2023.json",
+        "bytes": 176240,
+        "sha256": "dd575f82ff2cb82810f68524c4ed2e5bb1f0c49cea415eb3cc08f39832af0f50"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_14078_2024.json",
+        "bytes": 241696,
+        "sha256": "ee68a741a06681b23025574751d21d644ea5e03a0a00d120e838b507b2f8d80c"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_14078_2025.json",
+        "bytes": 259505,
+        "sha256": "ebb3096ea7690f40c10679faeb79e99e39c77015f2b1a804540945cd701bce14"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_14107_2020.json",
+        "bytes": 78872,
+        "sha256": "60c0c1e2f4a95ab1d4590f5664a10c6dc012a24efc8e52e2b4e58158c7d4ac2a"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_14107_2021.json",
+        "bytes": 206304,
+        "sha256": "cd64b2972d36a443aabb10a05dbc155ae5dd2f2bbb456615bad1789b6fdca5be"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_14107_2022.json",
+        "bytes": 190094,
+        "sha256": "c2ff09e6d3bdb7f000ed01ba455de45623fc0b089b73e0521d7253e331539c8b"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_14107_2023.json",
+        "bytes": 191833,
+        "sha256": "bb46d19f5606c97c650881db7b8b212406c1e5d412cd1365f91d253d941654e7"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_14107_2024.json",
+        "bytes": 209647,
+        "sha256": "40bf8615dca5525701f60438aa1ccd2269ecfe000c67c4918b6f966a35872002"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_14107_2025.json",
+        "bytes": 204342,
+        "sha256": "feb5aa08b99bf1ece3aaa091d67e5fc49c7fe837986a23f9dc0aeb2a279bffef"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_14168_2020.json",
+        "bytes": 80239,
+        "sha256": "9cd70c3ec7fa23ce86aaf2752dd8bf83427081687988553de7474c6b4a36820a"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_14168_2021.json",
+        "bytes": 204059,
+        "sha256": "e749f2be900d54f57fdf0adb1082e2526b1bd1239ffd5fda9012c8367f520514"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_14168_2022.json",
+        "bytes": 202976,
+        "sha256": "0e3da2b9f6e473f867cab2576d30b3e4471966b0f8258a72e59bda80fcf7acae"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_14168_2023.json",
+        "bytes": 212320,
+        "sha256": "fa70695cc9c6463cf3adc796b9d78af4c3be470e7a59cd9dbd5348bbebc727dc"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_14168_2024.json",
+        "bytes": 236837,
+        "sha256": "bdd2437ee82c3534900988b331c84ead02a684341cc59687ebc325a4e1721dde"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_14168_2025.json",
+        "bytes": 232514,
+        "sha256": "13ae3590f5af281637b2812ca78f894e3fd93d5f1a4fa8f83eb47e55c90c92a9"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_15689_2020.json",
+        "bytes": 80485,
+        "sha256": "012196a97949d45745a69925c8815351e66a58988fe3f8824f949ecfd110ec21"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_15689_2021.json",
+        "bytes": 209184,
+        "sha256": "58ba12c7d9812c550aab5d8e80b09ebd736ad06a3d11c2c6e543b126c7c79411"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_15689_2022.json",
+        "bytes": 160910,
+        "sha256": "8924c240a55d191f8899ca30d6d376a126e92f86c37c68720d4f7bb6202c07e6"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_15689_2023.json",
+        "bytes": 219963,
+        "sha256": "e260b339a35ba38cc39175df308c3be28f2cc84905de14b85788376df707e24c"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_15689_2024.json",
+        "bytes": 206058,
+        "sha256": "6b9a8392ebe1a4a5caee8c5a6ab3269a94ec918ca4140042e4e1066b45ba58eb"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_15689_2025.json",
+        "bytes": 220153,
+        "sha256": "cb9f339f509e374b93f84c2943dfdc26b7e3972ae2c25fda0b0ab309cc1cbbac"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_16256_2020.json",
+        "bytes": 94061,
+        "sha256": "51d0b853c0e011748f2fcddd30daf95cf5b5871a327bd76350c035b0852e9d7e"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_16256_2021.json",
+        "bytes": 161475,
+        "sha256": "866b917a3f40a9123388f3c9fb5e6eaf763b39292d8eeab7aa4c8da8cf57cd5e"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_16256_2022.json",
+        "bytes": 217335,
+        "sha256": "b78a220f225d81277c4755f5594b7f43f3190cd4e9fdc8d913cb6a5471418b0b"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_16256_2023.json",
+        "bytes": 210056,
+        "sha256": "fac5a6f5a067216f11f9fe7c5006177be82320d840c6e30b84719a3adabbd9a1"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_16256_2024.json",
+        "bytes": 160353,
+        "sha256": "2201b985a21aba6f7fd26a2ccf3aa57b586a1eba01cc2e783fac9a867ebd06c0"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_16256_2025.json",
+        "bytes": 237562,
+        "sha256": "aaf5491fabe05043967c4c359b5ca9bf0bdd4b10f8eb02fc2de7d3e11af5a581"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_17295_2020.json",
+        "bytes": 73318,
+        "sha256": "5b4d5532f7dcd052bb3736c24e6770920d1b823910e0b7c5df50e8d2795282b1"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_17295_2021.json",
+        "bytes": 139661,
+        "sha256": "74e597903b56c1d268fd04e763ffe0aa110fbc6771f122c88f7910fdc3392870"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_17295_2022.json",
+        "bytes": 216378,
+        "sha256": "248479804a1ac49d299b9b73f5390fed1da162314009d9c20149c4c181e33bbc"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_17295_2023.json",
+        "bytes": 216616,
+        "sha256": "acbc7af31ad8275b43b21c90764a61dfe301ead6f88c1b661fcee50bcc467e25"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_17295_2024.json",
+        "bytes": 202360,
+        "sha256": "683dc29a0d812a09da35550fb8c455eea7796797cb171ef230808b19f009692e"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_17295_2025.json",
+        "bytes": 221470,
+        "sha256": "9dcc3f11f70d6d37124913271f60aa97328f28df46c229a434d47e142014f745"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_17594_2020.json",
+        "bytes": 38110,
+        "sha256": "2dbaeab8972583ae77f677b24e4af3631126240bb9e1c642d9d4794cee87dc11"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_17594_2021.json",
+        "bytes": 147170,
+        "sha256": "2426eba50dee8eeec58673207b69dfc1ae705a2cf9e5d6521839b165010107f5"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_17594_2022.json",
+        "bytes": 220242,
+        "sha256": "d593c925329578ab8aabf94efb1198cf1d77ac25ca1b8bede8c83446c97eb96d"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_17594_2023.json",
+        "bytes": 254788,
+        "sha256": "fcc4fb3c7b9f1516ab8dd9944ec87828d2252c3c2c9c524ff99dde7f31b5106c"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_17594_2024.json",
+        "bytes": 250565,
+        "sha256": "980db065fd4566dc7ac6e4eb1c089cd5161b162c67f807c90bd4a51696ac34a1"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_17594_2025.json",
+        "bytes": 260602,
+        "sha256": "ef61291fd05ac9a79f5d90131ef11a90513fcfa07bdeb6a9670d9ee9279f4bda"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_17995_2020.json",
+        "bytes": 91986,
+        "sha256": "7cac242c1691d93c1178786fa5a63e7713b98a907b3e88a85ee47a997c93d057"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_17995_2021.json",
+        "bytes": 180446,
+        "sha256": "498cc25f1d20097a9056a17dd861459f96562d507ae8d41ee367c8820afa0db3"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_17995_2022.json",
+        "bytes": 201243,
+        "sha256": "cb4a4553321bca735cb4b691b673f7e8dbbaa0f112f742ac49e6bd60b04be001"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_17995_2023.json",
+        "bytes": 217624,
+        "sha256": "add6276907f1cf1a22e9990cac5e43b7349543e1aafeeadcf5f839684187823b"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_17995_2024.json",
+        "bytes": 235597,
+        "sha256": "aa466cea714d8324177e882fccebfac52d7dc3ddaba00d066de72cd5b1f0768f"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_17995_2025.json",
+        "bytes": 253161,
+        "sha256": "9a733535bf37a3c66d5d103fe46a6a6da48d5ff09eaa4e03991d0cc4fdcca449"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_18525_2020.json",
+        "bytes": 81650,
+        "sha256": "0efec5c9d1e9563342f80e9b1737eab554001cf3dc00a6d1468a25c2a220d6ef"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_18525_2021.json",
+        "bytes": 206190,
+        "sha256": "d6c5f0ff1198c504aae31dd05ca11ecf549793f41d0457cb8045a2eb73633d5a"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_18525_2022.json",
+        "bytes": 201851,
+        "sha256": "488bf51b6fc539641a4bf54b93b8a3ef1934ce6bcdb70052d1899fc010cf5b1a"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_18525_2023.json",
+        "bytes": 220013,
+        "sha256": "466045587b0b05352e802160b0109fd34e06a24648ebe8489466cd6023f26bd8"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_18525_2024.json",
+        "bytes": 232923,
+        "sha256": "2ccb65ac5f77f08e0dd7252124a84b7b855817ff9c3643e2bbbe7efd72043871"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_18525_2025.json",
+        "bytes": 228268,
+        "sha256": "4f640a2478815083a51e8a99ece5593bc78f7d6c71ae99ac2f60f0819f7e44ff"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_19291_2020.json",
+        "bytes": 81998,
+        "sha256": "fa9dd89078acd845f434bb0ade403fba794617ace5b600e028019d8123d026db"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_19291_2021.json",
+        "bytes": 165268,
+        "sha256": "99c4ce4705abca4e37deff4861fc4b7469ccb6fc4b0d709a8600b4a907fba0d7"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_19291_2022.json",
+        "bytes": 205280,
+        "sha256": "e28d2367fb2fa7852295e87eae9e3d410ee1c69b1315bfc33a904fb1f08f7323"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_19291_2023.json",
+        "bytes": 242196,
+        "sha256": "86dc339cbbe1d83b5042edb57b9e5343750e9c4fcc921a28721a55d61e96fa0a"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_19291_2024.json",
+        "bytes": 204720,
+        "sha256": "8a94a3cc21c8ae604ad3fc13e7da7346ae8f505946a05692203f180c24d8fc49"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_19291_2025.json",
+        "bytes": 252154,
+        "sha256": "50c119a8af9bb28338445d3bfcd30ec39f1089dd3cfadc77dc662b145d9d0225"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_20633_2020.json",
+        "bytes": 61677,
+        "sha256": "ad167c5abcafc10a83e6a8d8d4a11ba6cbe536097960cf2bfd9fff520f5fd9a3"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_20633_2021.json",
+        "bytes": 188806,
+        "sha256": "5d2b2856a0fc80eef8fdd0eedaeee92c6356a864aab289b27b0f5220a0e10388"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_20633_2022.json",
+        "bytes": 186818,
+        "sha256": "51dac3023b20bb075fdc742441739a9488c920d6c2f2dc65f5e8f9514f9b02d6"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_20633_2023.json",
+        "bytes": 218732,
+        "sha256": "5d3980b38726ea347a08d7b98fb52791d4168882478f57c20b78ab37c5247029"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_20633_2024.json",
+        "bytes": 230730,
+        "sha256": "296e2bf13203f8575938d3287e447f4efe4683c72b96e0c3292009129ae6e460"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_20633_2025.json",
+        "bytes": 247218,
+        "sha256": "ccdb883d3895c981b1e98c21d00d4792a0c346b1d1afdfe3023a7bd59bfc8a47"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_22250_2020.json",
+        "bytes": 110,
+        "sha256": "fb1e7ffdf5f8b7c8b67854d83711501c873075354a5b0e49efa5583dee655587"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_22250_2021.json",
+        "bytes": 157973,
+        "sha256": "49bd468a7722d42ef1558c512e6e347b209cbca027a315f1cea61fc74ccf5336"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_22250_2022.json",
+        "bytes": 210540,
+        "sha256": "26332347fd9197edcf5e17a3e07e5031af6e70c0ad0ee6c6648e44642d7951ce"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_22250_2023.json",
+        "bytes": 218760,
+        "sha256": "06dc46d47a8d70fa8c8bd4b514ca97ce9b69dbd01024ced122a0835069447609"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_22250_2024.json",
+        "bytes": 265626,
+        "sha256": "e1ade85500561f4d47e4404e4a40ae2e3fbb30eb3ba8b9515846cc87e2252e0b"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_22250_2025.json",
+        "bytes": 182047,
+        "sha256": "90e11f123e15f4e4762ab980f7ea630d8215da9e205b5a2594ae3d192c1fd80f"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_25377_2020.json",
+        "bytes": 74458,
+        "sha256": "5c20f9969f60c976cdce92fb47a317a5fc1312065f8be1b316f712702608788b"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_25377_2021.json",
+        "bytes": 156865,
+        "sha256": "635d852685fccf9645f644421d9264a2fbae815ce36e1dde127992fcc504ac80"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_25377_2022.json",
+        "bytes": 159336,
+        "sha256": "8c87dff54d09b8bb97b98e8bcb59abec0ed26e6d8058a36da522925bb1ecdc80"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_25377_2023.json",
+        "bytes": 181044,
+        "sha256": "2a8497fcf1798b4bf64b990fc5fed91416d5d0c942f26896feccf8068cbf5914"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_25377_2024.json",
+        "bytes": 220090,
+        "sha256": "deae47aa40c506555c19ec1cc9c492f3deded9b00dbe50f15d6a7f8c3d246ac4"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_25377_2025.json",
+        "bytes": 226678,
+        "sha256": "536d010474e634c95d4b4f86523e871cc55d6ec39c59dba0d125a139fdf958af"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_4676_2020.json",
+        "bytes": 63560,
+        "sha256": "7fe68a3192043ba663e8d8f74e273af6437b02dc4c887689ea42f838a2c8581f"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_4676_2021.json",
+        "bytes": 225487,
+        "sha256": "b7d55484fb683124baac941e27c1d0a0e1f8d3b089e4fd7fe4bd0db4764fa825"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_4676_2022.json",
+        "bytes": 217555,
+        "sha256": "3ba96da6c4e63b284ad5f7c14b4b3ad2065c7a75c311a5c90772ba31562056d4"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_4676_2023.json",
+        "bytes": 216632,
+        "sha256": "181438c8c8c5f3f0f83b9cf20f537ea2da8ee12dfa56700a48686f8693be4db6"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_4676_2024.json",
+        "bytes": 225371,
+        "sha256": "bba2c837811fd537388e007d9e72cd58862f5273c9720ce2d230ad5fdcedc8d5"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_4676_2025.json",
+        "bytes": 243849,
+        "sha256": "9a31b668edf0a7d80642b106ab0942639546e9ccd97b06dbb2bbe98a8ea99e46"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_9132_2020.json",
+        "bytes": 66997,
+        "sha256": "5ad9de42299b93ca0458f7c92ce73c7d884d9d95e5cb354ce465b1a83c65f069"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_9132_2021.json",
+        "bytes": 234530,
+        "sha256": "3e91fc760989c5bf61b0ca64da3c4df8eeff1b587df2b03645bebe5767f88dcc"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_9132_2022.json",
+        "bytes": 148848,
+        "sha256": "bc5eb4c34374b59c377ab970711fe77c69f0dd7195976a8e4704049f92cbbd3c"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_9132_2023.json",
+        "bytes": 187212,
+        "sha256": "db3600a2acf96f708e181aa467cff2d46f0db742745453abfd2e4d7d439136b4"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_9132_2024.json",
+        "bytes": 224490,
+        "sha256": "edc501d8f4af7515eb480699ec7f55fbd427eb84987f24863b76af6f04b925cd"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_9132_2025.json",
+        "bytes": 174683,
+        "sha256": "00e688be8e7deadf1dc0d4bce1dbd54b0a79598b1d68dbd224e0215c09f36858"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_9323_2020.json",
+        "bytes": 82990,
+        "sha256": "29a6e007e0570476323b6818b79ef393e8f4d24c3b5160d5ea4c8f82ba15c589"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_9323_2021.json",
+        "bytes": 210329,
+        "sha256": "52c1e1baeb14c6f58beb7ee190ed94c865af70aa97d5aad7e4405266213bba64"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_9323_2022.json",
+        "bytes": 195400,
+        "sha256": "23b26639945c833be46589b55c383f16aa5c70c6806a01bd6da3cb0f44ec9677"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_9323_2023.json",
+        "bytes": 208383,
+        "sha256": "1f35f3fe2d8163199d7a25cdc3fc93e95e4e0e63d5d3d384c0ba662363e9a3b2"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_9323_2024.json",
+        "bytes": 239520,
+        "sha256": "df8a2db2b6e7e77540299064ea87e09a2df287a71fe1f4d0fb87b9a74978304f"
+      },
+      {
+        "path": "data/reproducible_mlb_stuff/fangraphs_game_logs/fg_9323_2025.json",
+        "bytes": 237184,
+        "sha256": "a1451debe203f2f49684c12b006419d30c222083f6dd6f973f0de04497f82e38"
+      }
+    ],
+    "mlbam_to_fangraphs": [
+      {
+        "mlbam_id": 450203,
+        "fangraphs_id": 4676
+      },
+      {
+        "mlbam_id": 542881,
+        "fangraphs_id": 12880
+      },
+      {
+        "mlbam_id": 543135,
+        "fangraphs_id": 9132
+      },
+      {
+        "mlbam_id": 543243,
+        "fangraphs_id": 12768
+      },
+      {
+        "mlbam_id": 554430,
+        "fangraphs_id": 10310
+      },
+      {
+        "mlbam_id": 571578,
+        "fangraphs_id": 9323
+      },
+      {
+        "mlbam_id": 579328,
+        "fangraphs_id": 20633
+      },
+      {
+        "mlbam_id": 592332,
+        "fangraphs_id": 14107
+      },
+      {
+        "mlbam_id": 592791,
+        "fangraphs_id": 11674
+      },
+      {
+        "mlbam_id": 605135,
+        "fangraphs_id": 12304
+      },
+      {
+        "mlbam_id": 607536,
+        "fangraphs_id": 16256
+      },
+      {
+        "mlbam_id": 608379,
+        "fangraphs_id": 14078
+      },
+      {
+        "mlbam_id": 621244,
+        "fangraphs_id": 14168
+      },
+      {
+        "mlbam_id": 622491,
+        "fangraphs_id": 15689
+      },
+      {
+        "mlbam_id": 656302,
+        "fangraphs_id": 18525
+      },
+      {
+        "mlbam_id": 656605,
+        "fangraphs_id": 17594
+      },
+      {
+        "mlbam_id": 657277,
+        "fangraphs_id": 17995
+      },
+      {
+        "mlbam_id": 663903,
+        "fangraphs_id": 25377
+      },
+      {
+        "mlbam_id": 664285,
+        "fangraphs_id": 17295
+      },
+      {
+        "mlbam_id": 668678,
+        "fangraphs_id": 19291
+      },
+      {
+        "mlbam_id": 669302,
+        "fangraphs_id": 22250
+      }
+    ]
+  },
+  "official_stats_file": {
+    "path": "data/reproducible_mlb_stuff/mlb_official_pitching_2021_2025.parquet",
+    "sha256": "911bf4cb210168ad8f946f70bd5ae1b6a9a5d372c398b5afac14a78a8385c51f",
+    "rows": 4371
+  },
+  "audit": {
+    "path": "manifests/collection_audit.csv",
+    "qualified_count": 19,
+    "qualified_player_ids": [
+      450203,
+      542881,
+      543243,
+      554430,
+      571578,
+      592332,
+      592791,
+      605135,
+      607536,
+      608379,
+      621244,
+      622491,
+      656302,
+      656605,
+      657277,
+      663903,
+      664285,
+      668678,
+      669302
+    ],
+    "excluded": [
+      {
+        "player_id": 543135,
+        "name": "Nathan Eovaldi",
+        "exclusion_reason": "at least one season has fewer than 20 matched 50-pitch starts"
+      },
+      {
+        "player_id": 579328,
+        "name": "Yusei Kikuchi",
+        "exclusion_reason": "at least one season has fewer than 20 matched 50-pitch starts"
+      }
+    ],
+    "matched_50_pitch_starts_by_year": {
+      "2020": 176,
+      "2021": 512,
+      "2022": 546,
+      "2023": 583,
+      "2024": 570,
+      "2025": 560
+    },
+    "model_ready_rows_by_year": {
+      "2020": 118,
+      "2021": 436,
+      "2022": 482,
+      "2023": 520,
+      "2024": 502,
+      "2025": 497
+    }
+  }
+}

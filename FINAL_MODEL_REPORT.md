@@ -331,14 +331,14 @@ Ridge는 XGBoost보다 High를 7건 더 맞혔고 Low는 1건, Middle은 같았�
 
 ```powershell
 .\.venv\Scripts\python.exe search_xgboost_fast.py `
-  --statcast-dir data/statcast_mlb_stable_starters_2020 data/statcast_mlb_stable_starters_2021_2025 `
-  --stuff data/fangraphs_stuff_mlb_stable_starters_2020.parquet data/fangraphs_stuff_mlb_stable_starters_2021_2025.parquet `
+  --statcast-dir data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020 data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025 `
+  --stuff data/reproducible_mlb_stuff/fangraphs_stuff_mlb_stable_starters_2020.parquet data/reproducible_mlb_stuff/fangraphs_stuff_mlb_stable_starters_2021_2025.parquet `
   --output-dir experiments/runs/xgboost_fast_search_2020_2025
 
 .\.venv\Scripts\python.exe stuff_mlb_temporal_final.py `
-  --statcast-dir data/statcast_mlb_stable_starters_2020 data/statcast_mlb_stable_starters_2021_2025 `
-  --stuff data/fangraphs_stuff_mlb_stable_starters_2020.parquet data/fangraphs_stuff_mlb_stable_starters_2021_2025.parquet `
-  --official-stats data/mlb_official_pitching_2021_2025.parquet `
+  --statcast-dir data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2020 data/reproducible_mlb_stuff/statcast_mlb_stable_starters_2021_2025 `
+  --stuff data/reproducible_mlb_stuff/fangraphs_stuff_mlb_stable_starters_2020.parquet data/reproducible_mlb_stuff/fangraphs_stuff_mlb_stable_starters_2021_2025.parquet `
+  --official-stats data/reproducible_mlb_stuff/mlb_official_pitching_2021_2025.parquet `
   --output-dir experiments/runs/mlb_stuff_temporal_selected_2020_2025
 ```
 

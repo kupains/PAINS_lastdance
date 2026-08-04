@@ -1,0 +1,22 @@
+﻿player_id,name,matched_50_pitch_starts_2021,matched_50_pitch_starts_2022,matched_50_pitch_starts_2023,matched_50_pitch_starts_2024,matched_50_pitch_starts_2025,final_qualified,exclusion_reason
+663903,Brady Singer,25,24,29,32,32,True,
+450203,Charlie Morton,31,31,29,30,25,True,
+605135,Chris Bassitt,25,30,33,31,31,True,
+656302,Dylan Cease,32,32,33,32,32,True,
+664285,Framber Valdez,22,31,31,28,31,True,
+592791,Jameson Taillon,26,31,28,28,23,True,
+621244,José Berríos,32,31,32,32,30,True,
+592332,Kevin Gausman,33,30,31,31,32,True,
+607536,Kyle Freeland,22,31,28,20,28,True,
+669302,Logan Gilbert,23,32,32,33,24,True,
+657277,Logan Webb,25,32,33,33,34,True,
+622491,Luis Castillo,33,25,33,30,32,True,
+608379,Michael Wacha,20,23,24,29,30,True,
+656605,Mitch Keller,22,28,32,31,32,True,
+571578,Patrick Corbin,31,28,32,32,30,True,
+543243,Sonny Gray,26,22,32,28,31,True,
+542881,Tyler Anderson,29,28,25,31,26,True,
+668678,Zac Gallen,23,31,34,27,33,True,
+554430,Zack Wheeler,32,26,32,32,24,True,
+543135,Nathan Eovaldi,32,19,23,28,20,False,at least one season has fewer than 20 matched 50-pitch starts
+579328,Yusei Kikuchi,28,19,32,32,33,False,at least one season has fewer than 20 matched 50-pitch starts

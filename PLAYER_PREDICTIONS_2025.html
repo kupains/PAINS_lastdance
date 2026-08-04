@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2025 선수별 최신 Stuff+ 예측</title>
+<style>
+:root{--ink:#142033;--muted:#667085;--line:#dce2ea;--bg:#f1f4f8;--card:#fff;--blue:#175cd3;--low:#b42318;--mid:#b54708;--high:#067647}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,"Noto Sans KR","Segoe UI",sans-serif;line-height:1.55}
+main{width:min(1500px,calc(100% - 32px));margin:32px auto}.hero,.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 30px rgba(16,24,40,.06)}
+.hero{padding:32px 36px;margin-bottom:18px}h1{margin:0 0 8px;font-size:clamp(1.7rem,3vw,2.5rem)}p{margin:5px 0;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:12px;margin-top:24px}.card{padding:16px;border-radius:12px;background:#f8fafc;border:1px solid #e6ebf1}.card b{display:block;font-size:1.6rem;color:var(--blue)}
+.panel{overflow:hidden}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:.88rem}th,td{padding:11px 10px;border-bottom:1px solid #e8ecf1;text-align:right;white-space:nowrap}th{position:sticky;top:0;background:#eef3f9;color:#344054;font-size:.8rem;z-index:1}th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:inherit}tbody tr:nth-child(even){background:#fafbfd}tbody tr:hover{background:#eef6ff}tbody tr.disagree{background:#fff8ed}td.name{font-weight:700}.badge{display:inline-block;min-width:58px;padding:3px 8px;border-radius:999px;text-align:center;font-weight:700}.low{color:var(--low);background:#fef3f2}.middle{color:var(--mid);background:#fffaeb}.high{color:var(--high);background:#ecfdf3}.yes{color:#067647;font-weight:700}.no{color:#b42318;font-weight:800}
+.note{padding:18px 24px;border-top:1px solid var(--line);font-size:.9rem}code{background:#eef2f6;padding:.15em .35em;border-radius:4px}@media(max-width:720px){main{width:100%;margin:0}.hero,.panel{border-radius:0}.hero{padding:24px 20px}.cards{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<section class="hero">
+  <h1>2025 선수별 최신 Stuff+ 예측</h1>
+  <p>각 선수의 마지막 모델 평가 등판에서 실제 Stuff+와 XGBoost·Ridge의 연속 예측값을 비교합니다.</p>
+  <p>모델과 범주 경계는 2020~2024 자료로 확정했으며, 아래 실제값은 예측 후 비교를 위한 정답입니다.</p>
+  <div class="cards">
+    <div class="card"><b>19명</b>최종 평가 선수</div>
+    <div class="card"><b>17명</b>최신 등판 범주 일치</div>
+    <div class="card"><b>2025</b>진단 평가 시즌</div>
+  </div>
+</section>
+<section class="panel">
+<div class="table-wrap">
+<table>
+<thead><tr><th>선수</th><th>경기일</th><th>실제 Stuff+</th><th>Low 경계</th><th>High 경계</th><th>실제 범주</th><th>XGBoost 점수</th><th>범주</th><th>절대오차</th><th>Ridge 점수</th><th>범주</th><th>절대오차</th><th>일치</th></tr></thead>
+<tbody>
+<tr><td class="name">Brady Singer</td><td>2025-09-28</td><td>95.62</td><td>89.64</td><td>94.22</td><td><span class="badge high">High</span></td><td>97.61</td><td><span class="badge high">High</span></td><td>1.99</td><td>97.74</td><td><span class="badge high">High</span></td><td>2.12</td><td class="yes">일치</td></tr>
+<tr><td class="name">Charlie Morton</td><td>2025-09-13</td><td>95.56</td><td>98.54</td><td>104.03</td><td><span class="badge low">Low</span></td><td>96.90</td><td><span class="badge low">Low</span></td><td>1.34</td><td>96.52</td><td><span class="badge low">Low</span></td><td>0.96</td><td class="yes">일치</td></tr>
+<tr><td class="name">Chris Bassitt</td><td>2025-09-18</td><td>92.51</td><td>98.31</td><td>103.19</td><td><span class="badge low">Low</span></td><td>96.12</td><td><span class="badge low">Low</span></td><td>3.61</td><td>95.17</td><td><span class="badge low">Low</span></td><td>2.66</td><td class="yes">일치</td></tr>
+<tr class="disagree"><td class="name">Dylan Cease</td><td>2025-09-24</td><td>108.46</td><td>104.13</td><td>109.07</td><td><span class="badge middle">Middle</span></td><td>103.78</td><td><span class="badge low">Low</span></td><td>4.68</td><td>105.66</td><td><span class="badge middle">Middle</span></td><td>2.80</td><td class="no">불일치</td></tr>
+<tr class="disagree"><td class="name">Framber Valdez</td><td>2025-09-25</td><td>108.15</td><td>103.32</td><td>108.87</td><td><span class="badge middle">Middle</span></td><td>104.14</td><td><span class="badge middle">Middle</span></td><td>4.01</td><td>102.80</td><td><span class="badge low">Low</span></td><td>5.35</td><td class="no">불일치</td></tr>
+<tr><td class="name">Jameson Taillon</td><td>2025-09-27</td><td>92.59</td><td>94.30</td><td>98.03</td><td><span class="badge low">Low</span></td><td>93.41</td><td><span class="badge low">Low</span></td><td>0.82</td><td>93.53</td><td><span class="badge low">Low</span></td><td>0.94</td><td class="yes">일치</td></tr>
+<tr><td class="name">José Berríos</td><td>2025-09-16</td><td>84.65</td><td>93.66</td><td>100.11</td><td><span class="badge low">Low</span></td><td>87.71</td><td><span class="badge low">Low</span></td><td>3.06</td><td>86.30</td><td><span class="badge low">Low</span></td><td>1.65</td><td class="yes">일치</td></tr>
+<tr><td class="name">Kevin Gausman</td><td>2025-09-28</td><td>97.95</td><td>96.86</td><td>103.86</td><td><span class="badge middle">Middle</span></td><td>102.08</td><td><span class="badge middle">Middle</span></td><td>4.13</td><td>101.60</td><td><span class="badge middle">Middle</span></td><td>3.65</td><td class="yes">일치</td></tr>
+<tr><td class="name">Kyle Freeland</td><td>2025-09-27</td><td>94.95</td><td>83.61</td><td>90.38</td><td><span class="badge high">High</span></td><td>93.58</td><td><span class="badge high">High</span></td><td>1.37</td><td>93.37</td><td><span class="badge high">High</span></td><td>1.58</td><td class="yes">일치</td></tr>
+<tr><td class="name">Logan Gilbert</td><td>2025-09-27</td><td>101.77</td><td>99.29</td><td>104.50</td><td><span class="badge middle">Middle</span></td><td>103.27</td><td><span class="badge middle">Middle</span></td><td>1.50</td><td>103.89</td><td><span class="badge middle">Middle</span></td><td>2.12</td><td class="yes">일치</td></tr>
+<tr><td class="name">Logan Webb</td><td>2025-09-28</td><td>107.69</td><td>105.05</td><td>111.85</td><td><span class="badge middle">Middle</span></td><td>108.80</td><td><span class="badge middle">Middle</span></td><td>1.11</td><td>107.33</td><td><span class="badge middle">Middle</span></td><td>0.36</td><td class="yes">일치</td></tr>
+<tr><td class="name">Luis Castillo</td><td>2025-09-24</td><td>111.12</td><td>104.53</td><td>109.74</td><td><span class="badge high">High</span></td><td>95.41</td><td><span class="badge low">Low</span></td><td>15.71</td><td>94.82</td><td><span class="badge low">Low</span></td><td>16.30</td><td class="yes">일치</td></tr>
+<tr><td class="name">Michael Wacha</td><td>2025-09-27</td><td>90.78</td><td>95.28</td><td>100.65</td><td><span class="badge low">Low</span></td><td>94.12</td><td><span class="badge low">Low</span></td><td>3.34</td><td>93.71</td><td><span class="badge low">Low</span></td><td>2.93</td><td class="yes">일치</td></tr>
+<tr><td class="name">Mitch Keller</td><td>2025-09-26</td><td>95.36</td><td>97.80</td><td>104.37</td><td><span class="badge low">Low</span></td><td>91.16</td><td><span class="badge low">Low</span></td><td>4.20</td><td>92.94</td><td><span class="badge low">Low</span></td><td>2.42</td><td class="yes">일치</td></tr>
+<tr><td class="name">Patrick Corbin</td><td>2025-09-28</td><td>93.28</td><td>88.57</td><td>93.76</td><td><span class="badge middle">Middle</span></td><td>92.64</td><td><span class="badge middle">Middle</span></td><td>0.64</td><td>92.16</td><td><span class="badge middle">Middle</span></td><td>1.12</td><td class="yes">일치</td></tr>
+<tr><td class="name">Sonny Gray</td><td>2025-09-24</td><td>97.09</td><td>98.16</td><td>102.44</td><td><span class="badge low">Low</span></td><td>102.28</td><td><span class="badge middle">Middle</span></td><td>5.19</td><td>102.13</td><td><span class="badge middle">Middle</span></td><td>5.04</td><td class="yes">일치</td></tr>
+<tr><td class="name">Tyler Anderson</td><td>2025-08-29</td><td>105.47</td><td>99.29</td><td>103.54</td><td><span class="badge high">High</span></td><td>100.16</td><td><span class="badge middle">Middle</span></td><td>5.31</td><td>100.97</td><td><span class="badge middle">Middle</span></td><td>4.50</td><td class="yes">일치</td></tr>
+<tr><td class="name">Zac Gallen</td><td>2025-09-26</td><td>96.04</td><td>96.50</td><td>102.46</td><td><span class="badge low">Low</span></td><td>96.77</td><td><span class="badge middle">Middle</span></td><td>0.73</td><td>97.07</td><td><span class="badge middle">Middle</span></td><td>1.03</td><td class="yes">일치</td></tr>
+<tr><td class="name">Zack Wheeler</td><td>2025-08-15</td><td>103.65</td><td>110.82</td><td>116.77</td><td><span class="badge low">Low</span></td><td>107.60</td><td><span class="badge low">Low</span></td><td>3.95</td><td>106.67</td><td><span class="badge low">Low</span></td><td>3.02</td><td class="yes">일치</td></tr>
+</tbody>
+</table>
+</div>
+<div class="note"><strong>읽는 법:</strong> 연속 예측값을 선수별 학습 구간의 <code>q33</code>·<code>q67</code> 경계와 비교해 Low/Middle/High로 변환합니다. 노란 행은 두 모델의 범주가 다른 최신 등판입니다. 이 표는 미래 예측이 아닌 2025년 사후 평가 결과입니다.</div>
+</section>
+</main>
+</body>
+</html>

@@ -9,21 +9,25 @@ import pandas as pd
 
 
 def collect_game_logs(
-    outings_path: Path,
+    outings_path: Path | pd.DataFrame,
     output_path: Path,
     cache_dir: Path,
     start_year: int = 2020,
     end_year: int = 2025,
+    force: bool = False,
 ) -> pd.DataFrame:
     from fungo import fangraphs
     from pybaseball import playerid_reverse_lookup
 
-    outings = pd.read_parquet(outings_path)
+    outings = outings_path.copy() if isinstance(outings_path, pd.DataFrame) else pd.read_parquet(outings_path)
     outings["game_date"] = pd.to_datetime(outings["game_date"])
+    id_column = "pitcher" if "pitcher" in outings.columns else "player_id"
+    if id_column not in outings.columns:
+        raise ValueError("Input must contain a pitcher or player_id column.")
     pitcher_ids = sorted(
         int(value)
         for value in outings.loc[
-            outings["game_date"].dt.year.between(start_year, end_year), "pitcher"
+            outings["game_date"].dt.year.between(start_year, end_year), id_column
         ].dropna().unique()
     )
     lookup = playerid_reverse_lookup(pitcher_ids, key_type="mlbam")
@@ -39,7 +43,7 @@ def collect_game_logs(
     for mlbam_id, fangraphs_id in sorted(id_map.items()):
         for year in range(start_year, end_year + 1):
             cache_path = cache_dir / f"fg_{fangraphs_id}_{year}.json"
-            if cache_path.exists():
+            if cache_path.exists() and not force:
                 payload = json.loads(cache_path.read_text(encoding="utf-8"))
             else:
                 for attempt in range(1, 4):
@@ -61,7 +65,7 @@ def collect_game_logs(
 
     if not frames:
         raise RuntimeError("No FanGraphs game logs were collected.")
-    combined = pd.concat(frames, ignore_index=True)
+    combined = pd.concat(frames, ignore_index=True).copy()
     combined["game_date"] = pd.to_datetime(combined.get("gamedate"), errors="coerce")
     combined = combined.loc[
         combined["game_date"].dt.year.between(start_year, end_year)
@@ -85,9 +89,10 @@ def main() -> None:
     parser.add_argument("--cache-dir", default=Path("data/fangraphs_game_logs"), type=Path)
     parser.add_argument("--start-year", default=2020, type=int)
     parser.add_argument("--end-year", default=2025, type=int)
+    parser.add_argument("--force", action="store_true", help="Redownload cached API responses.")
     args = parser.parse_args()
     result = collect_game_logs(
-        args.outings, args.output, args.cache_dir, args.start_year, args.end_year
+        args.outings, args.output, args.cache_dir, args.start_year, args.end_year, args.force
     )
     print(f"Wrote {len(result):,} starter game logs to {args.output}")
 

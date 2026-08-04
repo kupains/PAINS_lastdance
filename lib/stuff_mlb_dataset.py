@@ -93,10 +93,10 @@ def _as_paths(value: Path | Sequence[Path]) -> list[Path]:
     return [Path(path) for path in value]
 
 
-def make_dataset(
+def build_merged_outings(
     statcast_dir: Path | Sequence[Path], stuff_path: Path | Sequence[Path]
-) -> tuple[pd.DataFrame, list[int]]:
-    """Build the candidate dataset while qualifying pitchers on 2021-2025 only."""
+) -> pd.DataFrame:
+    """Join Statcast outings to FanGraphs starts and retain 50+ pitch outings."""
     logs = pd.concat(
         [pd.read_parquet(path) for path in _as_paths(stuff_path)], ignore_index=True
     )
@@ -105,8 +105,8 @@ def make_dataset(
 
     statcast_paths = [
         path
-        for directory in _as_paths(statcast_dir)
-        for path in sorted(directory.glob("*.parquet"))
+        for source in _as_paths(statcast_dir)
+        for path in ([source] if source.is_file() else sorted(source.glob("*.parquet")))
     ]
     frames = [
         frame
@@ -125,6 +125,14 @@ def make_dataset(
         ["pitcher", "game_date"], keep="last"
     ).reset_index(drop=True)
 
+    return outings
+
+
+def make_dataset(
+    statcast_dir: Path | Sequence[Path], stuff_path: Path | Sequence[Path]
+) -> tuple[pd.DataFrame, list[int]]:
+    """Build the candidate dataset while qualifying pitchers on 2021-2025 only."""
+    outings = build_merged_outings(statcast_dir, stuff_path)
     counts = outings.groupby(["pitcher", outings["game_date"].dt.year]).size().unstack(fill_value=0)
     for year in range(2021, 2026):
         if year not in counts:
