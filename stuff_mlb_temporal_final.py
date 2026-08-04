@@ -381,12 +381,13 @@ def _summaries(predictions: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     return pooled, per_pitcher
 
 
-def run(
+def _legacy_run_for_reproduction(
     statcast_dirs: list[Path],
     stuff_paths: list[Path],
     official_stats_path: Path,
     output_dir: Path,
 ) -> pd.DataFrame:
+    """Historical implementation retained only for result provenance."""
     data, qualified = make_dataset(statcast_dirs, stuff_paths)
     data = _prepare_data(data)
     development = data.loc[data["year"].le(FINAL_TRAIN_END)].copy()
@@ -460,18 +461,54 @@ def run(
     return pooled
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Select on pre-2025 rolling validation, then test once on 2025."
+def run(
+    statcast_dirs: list[Path],
+    stuff_paths: list[Path],
+    official_stats_path: Path,
+    output_dir: Path,
+    *,
+    locked_config_path: Path | None = None,
+    device: str = "auto",
+) -> dict[str, object]:
+    """Compatibility API for exact locked final replay.
+
+    The historical API silently selected a model and then scored 2025 in one
+    call.  A lock is now mandatory so this entrypoint cannot reselect anything.
+    """
+
+    if locked_config_path is None:
+        raise ValueError(
+            "locked_config_path is required; run select_models.py before the "
+            "locked 2025 final evaluation"
+        )
+
+    from lib.evaluation import load_locked_model_config
+    from lib.stuff_cli import load_stuff_data
+    from lib.stuff_final import run_locked_final_evaluation
+
+    bundle = load_stuff_data(
+        statcast_paths=statcast_dirs,
+        stuff_paths=stuff_paths,
+        official_stats_paths=[official_stats_path],
+        qualification_mode="research",
     )
-    parser.add_argument("--statcast-dir", required=True, nargs="+", type=Path)
-    parser.add_argument("--stuff", required=True, nargs="+", type=Path)
-    parser.add_argument("--official-stats", required=True, type=Path)
-    parser.add_argument("--output-dir", required=True, type=Path)
-    args = parser.parse_args()
-    result = run(args.statcast_dir, args.stuff, args.official_stats, args.output_dir)
-    print(result.to_string(index=False))
+    return run_locked_final_evaluation(
+        bundle,
+        locked_config=load_locked_model_config(locked_config_path),
+        output_dir=output_dir,
+        device=device,
+    )
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Forward the legacy command name to ``final_evaluate.py``."""
+
+    import sys
+
+    from final_evaluate import main as unified_main
+
+    return unified_main(list(sys.argv[1:] if argv is None else argv))
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

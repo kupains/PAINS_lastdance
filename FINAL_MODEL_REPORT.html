@@ -1,846 +1,3799 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MLB 선발투수 Stuff+ 범주 예측 최종 종합 보고서</title><style>:root{--ink:#172033;--line:#d9dfe8;--accent:#174ea6}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:#eef1f5;font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo","Segoe UI",sans-serif;line-height:1.72;word-break:keep-all}main{width:min(1060px,calc(100% - 32px));margin:32px auto;padding:56px 64px 72px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 32px rgba(23,32,51,.08)}h1{margin:0 0 28px;padding-bottom:18px;border-bottom:3px solid var(--accent);font-size:2.25rem;line-height:1.25}h2{margin:48px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--line);font-size:1.55rem}h3{margin:32px 0 12px;font-size:1.2rem}strong{color:#0f3d81}ul,ol{padding-left:1.5rem}table{display:block;width:100%;margin:18px 0 28px;overflow-x:auto;border-collapse:collapse;font-size:.93rem}th,td{padding:9px 12px;border:1px solid var(--line);text-align:left;vertical-align:top;white-space:nowrap}th{background:#edf2f8}tr:nth-child(even) td{background:#fafbfd}code{padding:.12em .35em;border-radius:4px;background:#eef2f6;font-family:"Cascadia Code",Consolas,monospace;font-size:.9em;word-break:break-all}pre{overflow:auto;padding:16px 18px;border-radius:8px;color:#eef4ff;background:#182233}pre code{padding:0;color:inherit;background:transparent}.print-button{position:fixed;top:18px;right:20px;padding:10px 15px;border:0;border-radius:999px;color:#fff;background:var(--accent);font:600 14px inherit}@media(max-width:720px){main{width:100%;margin:0;padding:30px 20px 48px;border:0;border-radius:0}.print-button{position:static;display:block;margin:12px 20px 0 auto}}@media print{body{background:#fff}main{width:auto;margin:0;padding:0;border:0;box-shadow:none}.print-button{display:none}table,pre{break-inside:avoid}}</style></head><body><button class="print-button" onclick="window.print()">인쇄 / PDF 저장</button><main><h1 id="mlb-stuff">MLB 선발투수 Stuff+ 범주 예측 최종 종합 보고서</h1>
-<style>
-.viz{margin:22px 0 32px;padding:22px;border:1px solid #d9e2ef;border-radius:14px;background:linear-gradient(145deg,#fbfdff,#f3f7fc)}
-.viz-title{margin:0 0 4px;font-size:1.05rem;font-weight:750}.viz-note{margin:0 0 18px;color:#637087;font-size:.86rem}
-.legend{display:flex;flex-wrap:wrap;gap:14px;margin:0 0 14px;font-size:.85rem}.legend span{display:flex;align-items:center;gap:6px}.swatch{width:12px;height:12px;border-radius:3px}
-.bar-row{display:grid;grid-template-columns:128px 1fr 58px;align-items:center;gap:10px;margin:10px 0;font-size:.88rem}.bar-track{height:20px;overflow:hidden;border-radius:5px;background:#e4eaf2}.bar{height:100%;border-radius:5px;background:#174ea6}.bar.ridge{background:#e05a47}.bar.ewma{background:#2f9e73}.bar.last{background:#8d6cc7}.bar.mode{background:#8b95a5}
-.bar-pair{display:grid;gap:4px}.bar-mini{height:9px;border-radius:4px}.metric-label{font-weight:650}.axis{display:flex;justify-content:space-between;margin:4px 58px 0 138px;color:#7a8597;font-size:.72rem}
-.matrix-grid{display:grid;grid-template-columns:repeat(2,minmax(260px,1fr));gap:18px}.matrix{display:grid;grid-template-columns:72px repeat(3,1fr);gap:4px}.matrix div{display:flex;min-height:54px;align-items:center;justify-content:center;border-radius:7px;font-size:.88rem}.matrix .head{min-height:32px;color:#556176;background:#e8edf4;font-weight:650}.matrix .cell{color:#10253f;font-weight:700}.matrix .diag{outline:2px solid #174ea6}.matrix-caption{text-align:center;font-weight:700;margin-bottom:8px}
-.chart-scroll{overflow-x:auto}.line-chart{display:block;width:100%;min-width:680px;height:auto}.chart-grid{stroke:#dbe2ec;stroke-width:1}.chart-axis{fill:#738095;font-size:12px}.chart-label{fill:#344258;font-size:13px;font-weight:600}
-.takeaway{margin:18px 0 0;padding:12px 15px;border-left:4px solid #174ea6;border-radius:4px;background:#eaf2ff;font-size:.9rem}
-@media(max-width:720px){.viz{padding:16px}.matrix-grid{grid-template-columns:1fr}.bar-row{grid-template-columns:94px 1fr 48px}.axis{margin-left:104px;margin-right:48px}}
-@media print{.viz{break-inside:avoid;background:#fff}.bar,.bar.ridge,.bar.ewma,.bar.last,.bar.mode{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
-</style>
-<ul>
-<li>작성일: 2026-07-24</li>
-<li>주 예측 모델: XGBoost (내부 실행명: <code>xgboost_tpe_span4_compact_locked</code>)</li>
-<li>해석 보조 모델: Ridge (내부 실행명: <code>ridge_span4_compact_alpha100_scale0.5</code>)</li>
-<li>개발 데이터: 2020~2024년</li>
-<li>최종 성능평가 데이터: 2025년</li>
-<li>분석 단위: 투수별 50구 이상 공식 선발 등판</li>
-<li>최종 평가 표본: 19명, 497등판</li>
-</ul>
-<h2 id="section">1. 요약</h2>
-<p>2020~2024년 자료만으로 모델과 설정을 모두 정한 뒤, 모델 선택에 사용하지 않은
-2025년 자료로 최종 성능을 평가했다. 최종 모델은 비선형 관계를 학습하는 XGBoost와
-결과를 계수로 설명하기 쉬운 Ridge 두 가지다.</p>
-<table>
-<thead>
-<tr>
-<th>역할</th>
-<th>모델</th>
-<th style="text-align: right;">2025 정확도</th>
-<th style="text-align: right;">범주별 평균 정확도</th>
-<th style="text-align: right;">범주별 평균 F1</th>
-<th style="text-align: right;">범주 거리 오차</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>주 예측</td>
-<td>XGBoost</td>
-<td style="text-align: right;">51.71%</td>
-<td style="text-align: right;">49.31%</td>
-<td style="text-align: right;">0.496</td>
-<td style="text-align: right;">0.547</td>
-</tr>
-<tr>
-<td>해석 보조</td>
-<td>Ridge</td>
-<td style="text-align: right;"><strong>52.92%</strong></td>
-<td style="text-align: right;"><strong>51.05%</strong></td>
-<td style="text-align: right;"><strong>0.514</strong></td>
-<td style="text-align: right;"><strong>0.531</strong></td>
-</tr>
-</tbody>
-</table>
-<p>두 모델은 497건 중 455건에서 같은 범주를 예측해 일치율 91.55%를 기록했다. 일치한
-등판의 정확도는 53.41%였다. 불일치 42건에서는 XGBoost가 33.33%, Ridge가 47.62%를
-맞혔다. 이 결과는 설명용 진단이며 2025를 보고 모델 설정이나 역할을 변경하지 않았다.</p>
-<p>실무적으로는 XGBoost의 비선형 예측과 Ridge의 해석을 함께 제공하되, 두 모델의 예측 범주가
-다르면 불확실성이 높은 등판으로 표시하는 방식이 적절하다. 현재 성능은 다음 등판의 변화를
-정확히 맞히는 수준이라기보다, 최근 4경기에 더 큰 비중을 둔 Stuff+ 평균을 기본값으로 삼고
-물리·워크로드 피처로 조금 보정하는 수준이다.</p>
-<h3 id="metric-guide">결과표 읽는 법</h3>
-<ul>
-<li><strong>정확도</strong>: 전체 497등판 중 예측 범주를 정확히 맞힌 비율이다.</li>
-<li><strong>범주별 평균 정확도</strong>: Low·Middle·High 각각의 정답률을 동일한 비중으로 평균한 값이다. 표본이 많은 범주에만 잘 맞혀도 높아지는 문제를 줄인다.</li>
-<li><strong>범주별 평균 F1</strong>: 각 범주의 정밀도와 재현율을 함께 반영한 뒤 세 범주를 평균한 값이다.</li>
-<li><strong>범주 거리 오차</strong>: 정확하면 0, 한 단계 차이면 1, Low와 High처럼 두 단계 차이면 2다. <strong>낮을수록 좋다.</strong></li>
-<li><strong>최근 4경기 가중평균(EWMA4)</strong>: 최근 등판일수록 더 큰 비중을 주어 계산한 Stuff+ 평균이다.</li>
-</ul>
-<h2 id="section-1">2. 모델 선택과 최종 평가 방식</h2>
-<p>이번 실행은 다음 순서를 강제한다.</p>
-<ol>
-<li>모델 선택 함수에는 2024년 이하 데이터만 전달한다.</li>
-<li>2020~2021 학습 → 2022 검증을 수행한다.</li>
-<li>2020~2022 학습 → 2023 검증을 수행한다.</li>
-<li>2020~2023 학습 → 2024 검증을 수행한다.</li>
-<li>연도별 범주 평균 정확도의 평균에서 변동성의 절반을 뺀 점수로 XGBoost를 확정한다.</li>
-<li>XGBoost가 Ridge보다 범주별 평균 정확도에서 0.5%p 이상 높아야 주 모델 조건을 통과한다.</li>
-<li>두 모델을 2020~2024년으로 재학습한 뒤 2025년에 적용한다.</li>
-</ol>
-<p>최종 XGBoost는 Ridge보다 연도별 검증의 범주 평균 정확도가 0.517%p 높아 기준을 간신히
-통과했다. 두 모델의 세부 설정은 모두 2025년 결과를 보기 전에 정했다.</p>
-<h2 id="section-2">3. 데이터</h2>
-<h3 id="section-3">3.1 출처</h3>
-<table>
-<thead>
-<tr>
-<th>데이터</th>
-<th>사용 내용</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Statcast</td>
-<td>투구 수, 구속, 회전수, 릴리스, 무브먼트, 구종 구성</td>
-</tr>
-<tr>
-<td>FanGraphs 경기 로그</td>
-<td>공식 선발 여부와 선발 Stuff+</td>
-</tr>
-<tr>
-<td>MLB 공식 투구 기록</td>
-<td>선수 식별자와 이름</td>
-</tr>
-</tbody>
-</table>
-<p>2020년은 단축 시즌이므로 선수 자격 판정에는 사용하지 않고 추가 학습 이력으로만 사용했다.</p>
-<h3 id="section-4">3.2 분석 대상</h3>
-<p>2021~2025년의 모든 시즌에서 <code>공식 선발 + Statcast 50구 이상</code> 등판을 20회 이상 확보한
-19명을 대상으로 했다. 2025년 등판 수는 평가 선수를 정하는 데 사용했지만, 2025년
-Stuff+ 결과는 모델 종류나 세부 설정을 선택하는 데 사용하지 않았다.</p>
-<h3 id="section-5">3.3 시즌별 표본</h3>
-<table>
-<thead>
-<tr>
-<th style="text-align: right;">시즌</th>
-<th style="text-align: right;">50구 이상 선발</th>
-<th style="text-align: right;">결측값 없는 등판</th>
-<th style="text-align: right;">결측 제외</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: right;">2020</td>
-<td style="text-align: right;">176</td>
-<td style="text-align: right;">118</td>
-<td style="text-align: right;">58</td>
-</tr>
-<tr>
-<td style="text-align: right;">2021</td>
-<td style="text-align: right;">512</td>
-<td style="text-align: right;">436</td>
-<td style="text-align: right;">76</td>
-</tr>
-<tr>
-<td style="text-align: right;">2022</td>
-<td style="text-align: right;">546</td>
-<td style="text-align: right;">482</td>
-<td style="text-align: right;">64</td>
-</tr>
-<tr>
-<td style="text-align: right;">2023</td>
-<td style="text-align: right;">583</td>
-<td style="text-align: right;">520</td>
-<td style="text-align: right;">63</td>
-</tr>
-<tr>
-<td style="text-align: right;">2024</td>
-<td style="text-align: right;">570</td>
-<td style="text-align: right;">502</td>
-<td style="text-align: right;">68</td>
-</tr>
-<tr>
-<td style="text-align: right;">2025</td>
-<td style="text-align: right;">560</td>
-<td style="text-align: right;">497</td>
-<td style="text-align: right;">63</td>
-</tr>
-</tbody>
-</table>
-<p>입력값 또는 예측할 범주에 결측이 있는 행은 학습과 평가에서 제외했다. 두 최종 모델과
-비교용 단순 예측은 동일한 2025년 497등판에서 비교했다.</p>
-<h2 id="section-6">4. 예측할 범주</h2>
-<p>각 투수의 학습 구간 Stuff+에서 33.3%와 66.7% 분위수를 계산했다.</p>
-<ul>
-<li>Low: Stuff+ ≤ 학습 구간 33.3% 분위수</li>
-<li>Middle: 두 분위수 사이</li>
-<li>High: Stuff+ &gt; 학습 구간 66.7% 분위수</li>
-</ul>
-<p>각 연도를 검증할 때는 그보다 이전 시즌의 학습 자료만으로 경계값을 만든다. 최종 2025 평가는
-2020~2024년 Stuff+만으로 선수별 경계값을 만든다.</p>
-<h2 id="section-7">5. 모델에 넣은 정보</h2>
-<h3 id="section-8">5.1 공통 후보 28개</h3>
-<p>워크로드:</p>
-<ul>
-<li><code>prev_start_pitch_count</code></li>
-<li><code>rest_days</code></li>
-<li><code>workload_density_3starts</code></li>
-</ul>
-<p>Stuff+ 이력:</p>
-<ul>
-<li><code>prior_stuff_plus</code></li>
-<li><code>stuff_plus_mean_last5</code></li>
-<li><code>stuff_plus_slope_last5</code></li>
-</ul>
-<p>투구 물리 정보:</p>
-<ul>
-<li><code>release_speed_ma5</code>, <code>release_speed_slope5</code></li>
-<li><code>release_spin_rate_ma5</code>, <code>release_spin_rate_slope5</code></li>
-<li><code>release_extension_ma5</code>, <code>release_extension_slope5</code></li>
-<li><code>release_pos_x_ma5</code>, <code>release_pos_x_slope5</code></li>
-<li><code>release_pos_z_ma5</code>, <code>release_pos_z_slope5</code></li>
-<li><code>arm_angle_ma5</code>, <code>arm_angle_slope5</code></li>
-<li><code>pfx_x_ma5</code>, <code>pfx_x_slope5</code></li>
-<li><code>pfx_z_ma5</code>, <code>pfx_z_slope5</code></li>
-<li><code>spin_axis_sin_ma5</code>, <code>spin_axis_cos_ma5</code></li>
-</ul>
-<p>구종 구성:</p>
-<ul>
-<li><code>breaking_share_ma5</code>, <code>breaking_share_slope5</code></li>
-<li><code>offspeed_share_ma5</code>, <code>offspeed_share_slope5</code></li>
-</ul>
-<p>구종은 패스트볼·브레이킹볼·오프스피드로 묶었다. 합계 제약으로 인한 중복을 피하기 위해
-패스트볼 비중은 직접 입력하지 않았다.</p>
-<h3 id="compact-16">5.2 최종 모델에 사용한 16개 입력 정보</h3>
-<p>두 최종 모델은 후보 28개 중 동일하게 선별한 16개 피처를 사용한다.</p>
-<ul>
-<li><code>prior_minus_ewma4</code></li>
-<li><code>mean5_minus_ewma4</code></li>
-<li><code>stuff_plus_slope_last5</code></li>
-<li><code>prev_start_pitch_count</code></li>
-<li><code>rest_days</code></li>
-<li><code>workload_density_3starts</code></li>
-<li><code>release_speed_slope5</code></li>
-<li><code>release_spin_rate_slope5</code></li>
-<li><code>release_extension_slope5</code></li>
-<li><code>release_pos_x_slope5</code></li>
-<li><code>release_pos_z_slope5</code></li>
-<li><code>arm_angle_slope5</code></li>
-<li><code>pfx_x_slope5</code></li>
-<li><code>pfx_z_slope5</code></li>
-<li><code>breaking_share_slope5</code></li>
-<li><code>offspeed_share_slope5</code></li>
-</ul>
-<h2 id="section-9">6. 모델 구조</h2>
-<p>두 모델 모두 최근 4경기 가중평균(EWMA4)을 다음 경기의 기본 예상값으로 둔다. 그다음
-물리·워크로드 피처로 실제 Stuff+가 이 기본값에서 얼마나 벗어날지를 예측한다.</p>
-<pre><code class="language-text">기본값과의 차이 = 현재 Stuff+ - 직전까지의 최근 4경기 가중평균
-최종 예상 Stuff+ = 최근 4경기 가중평균 + 보정 반영률 × 예상 차이
-</code></pre>
-<h3 id="xgboost">6.1 XGBoost</h3>
-<ul>
-<li>역할: 비선형 주 예측</li>
-<li>입력 피처: 최종 선별 16개</li>
-<li>기본 예상값: 최근 4경기 가중평균</li>
-<li>trees: 100</li>
-<li>max depth: 2</li>
-<li>learning rate: 0.04221</li>
-<li>min child weight: 15.043</li>
-<li>L2(<code>reg_lambda</code>): 16.823</li>
-<li>L1(<code>reg_alpha</code>): 0.706</li>
-<li>gamma: 0</li>
-<li>subsample: 0.9997</li>
-<li>column sample: 0.5856</li>
-<li>모델 보정 반영률: 57.5%</li>
-<li>tree method: histogram, max bins 64</li>
-</ul>
-<h3 id="ridge">6.2 Ridge</h3>
-<ul>
-<li>역할: 해석 가능한 보조 예측</li>
-<li>입력 피처: 최종 선별 16개</li>
-<li>기본 예상값: 최근 4경기 가중평균</li>
-<li>alpha: 100</li>
-<li>모델 보정 반영률: 50%</li>
-<li>입력 피처: 투수별 학습 데이터에서 표준화</li>
-</ul>
-<p>Ridge는 과적합을 막는 제약을 강하게 적용하고, 모델이 계산한 보정값도 50%만 반영한다.
-따라서 최근 4경기 가중평균에서 크게 벗어나지 않는 보수적인 예측을 만든다.</p>
-<h2 id="section-10">7. 연도별 검증 결과와 모델 선택</h2>
-<p>XGBoost의 세부 설정은 자동 탐색 방법(TPE)으로 다음과 같이 좁혔다.</p>
-<ol>
-<li>자동으로 만든 설정 32개를 2023년에 평가하고 상위 10개 유지</li>
-<li>상위 10개를 2023~2024년에 평가하고 상위 3개 유지</li>
-<li>상위 3개를 2022~2024년에 평가</li>
-<li>최고 점수와 0.3%p 이내로 비슷하면 과적합 위험이 낮은 더 단순한 설정 선택</li>
-</ol>
-<p>선택 점수는 <code>범주별 평균 정확도의 연도 평균 - 0.5 × 연도별 변동성</code>이다.
-여러 해에 걸쳐 성능이 높고 안정적인 설정을 고르기 위한 기준이다.</p>
-<section class="viz" aria-label="연도별 범주 평균 정확도 선 그래프">
-<p class="viz-title">연도별 범주 평균 정확도</p>
-<p class="viz-note">2025를 전혀 사용하지 않은 순차 검증. 세 모델 모두 연도 효과가 크지만 XGBoost가 가장 안정적이다.</p>
-<div class="legend"><span><i class="swatch" style="background:#174ea6"></i>XGBoost</span><span><i class="swatch" style="background:#e05a47"></i>Ridge</span><span><i class="swatch" style="background:#2f9e73"></i>EWMA4</span></div>
-<div class="chart-scroll"><svg class="line-chart" viewBox="0 0 820 320" role="img" aria-label="2022년부터 2024년까지 세 모델의 범주 평균 정확도">
-<line class="chart-grid" x1="90" y1="45" x2="780" y2="45"/><line class="chart-grid" x1="90" y1="105" x2="780" y2="105"/><line class="chart-grid" x1="90" y1="165" x2="780" y2="165"/><line class="chart-grid" x1="90" y1="225" x2="780" y2="225"/>
-<text class="chart-axis" x="42" y="49">56%</text><text class="chart-axis" x="42" y="109">54%</text><text class="chart-axis" x="42" y="169">52%</text><text class="chart-axis" x="42" y="229">50%</text>
-<text class="chart-label" x="128" y="275">2022</text><text class="chart-label" x="408" y="275">2023</text><text class="chart-label" x="688" y="275">2024</text>
-<polyline points="145,97 425,118 705,50" fill="none" stroke="#174ea6" stroke-width="4"/><polyline points="145,123 425,136 705,52" fill="none" stroke="#e05a47" stroke-width="4"/><polyline points="145,86 425,165 705,55" fill="none" stroke="#2f9e73" stroke-width="4"/>
-<g fill="#174ea6"><circle cx="145" cy="97" r="6"/><circle cx="425" cy="118" r="6"/><circle cx="705" cy="50" r="6"/></g><g fill="#e05a47"><circle cx="145" cy="123" r="6"/><circle cx="425" cy="136" r="6"/><circle cx="705" cy="52" r="6"/></g><g fill="#2f9e73"><circle cx="145" cy="86" r="6"/><circle cx="425" cy="165" r="6"/><circle cx="705" cy="55" r="6"/></g>
-<text class="chart-axis" x="157" y="92">54.27</text><text class="chart-axis" x="437" y="113">53.57</text><text class="chart-axis" x="717" y="45">55.83</text>
-</svg></div>
-<p class="takeaway"><strong>핵심:</strong> XGBoost의 검증 평균은 54.56%, 연도별 표준편차는 0.94%p로 세 후보 중 가장 작다.</p>
-</section>
-<table>
-<thead>
-<tr>
-<th>모델</th>
-<th style="text-align: right;">2022</th>
-<th style="text-align: right;">2023</th>
-<th style="text-align: right;">2024</th>
-<th style="text-align: right;">평균</th>
-<th style="text-align: right;">표준편차</th>
-<th style="text-align: right;">선택 점수</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>최적화 XGBoost</td>
-<td style="text-align: right;">54.27%</td>
-<td style="text-align: right;">53.57%</td>
-<td style="text-align: right;">55.83%</td>
-<td style="text-align: right;"><strong>54.56%</strong></td>
-<td style="text-align: right;"><strong>0.94%p</strong></td>
-<td style="text-align: right;"><strong>54.09%</strong></td>
-</tr>
-<tr>
-<td>Ridge</td>
-<td style="text-align: right;">53.39%</td>
-<td style="text-align: right;">52.98%</td>
-<td style="text-align: right;">55.76%</td>
-<td style="text-align: right;">54.04%</td>
-<td style="text-align: right;">1.23%p</td>
-<td style="text-align: right;">53.43%</td>
-</tr>
-<tr>
-<td>EWMA4</td>
-<td style="text-align: right;">54.65%</td>
-<td style="text-align: right;">51.99%</td>
-<td style="text-align: right;">55.67%</td>
-<td style="text-align: right;">54.10%</td>
-<td style="text-align: right;">1.55%p</td>
-<td style="text-align: right;">53.33%</td>
-</tr>
-</tbody>
-</table>
-<p>XGBoost의 Ridge 대비 범주별 평균 정확도 우위는 0.517%p로 사전에 정한 0.5%p 조건을
-통과했다. 동일한 난수 기준으로 전체 탐색을 두 번 실행했을 때 최종 설정이 완전히 같았고,
-각 실행 시간은 약 29초였다.</p>
-<h2 id="section-11">8. 2025 최종 성능평가</h2>
-<section class="viz" aria-label="2025 모델 성능 막대그래프">
-<p class="viz-title">2025 최종 성능평가</p>
-<p class="viz-note">막대는 정확도 기준이며 축 범위는 0~60%. 숫자는 실제 정확도다.</p>
-<div class="bar-row"><span class="metric-label">Ridge</span><div class="bar-track"><div class="bar ridge" style="width:88.2%"></div></div><strong>52.92%</strong></div>
-<div class="bar-row"><span class="metric-label">EWMA4</span><div class="bar-track"><div class="bar ewma" style="width:87.2%"></div></div><strong>52.31%</strong></div>
-<div class="bar-row"><span class="metric-label">XGBoost</span><div class="bar-track"><div class="bar" style="width:86.2%"></div></div><strong>51.71%</strong></div>
-<div class="bar-row"><span class="metric-label">직전 Stuff+</span><div class="bar-track"><div class="bar last" style="width:83.2%"></div></div><strong>49.90%</strong></div>
-<div class="bar-row"><span class="metric-label">가장 잦은 범주</span><div class="bar-track"><div class="bar mode" style="width:71.4%"></div></div><strong>42.86%</strong></div>
-<div class="axis"><span>0%</span><span>30%</span><span>60%</span></div>
-<p class="takeaway"><strong>핵심:</strong> Ridge, EWMA4, XGBoost의 차이는 1.21%p 이내다. 복잡한 모델의 개선 폭보다 과거 Stuff+ 지속성 자체의 기여가 더 크다.</p>
-</section>
-<table>
-<thead>
-<tr>
-<th>모델</th>
-<th style="text-align: right;">평가 등판</th>
-<th style="text-align: right;">정확도</th>
-<th style="text-align: right;">범주별 평균 정확도</th>
-<th style="text-align: right;">범주별 평균 F1</th>
-<th style="text-align: right;">범주 거리 오차</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Ridge 해석 보조</strong></td>
-<td style="text-align: right;">497</td>
-<td style="text-align: right;"><strong>52.92%</strong></td>
-<td style="text-align: right;"><strong>51.05%</strong></td>
-<td style="text-align: right;"><strong>0.514</strong></td>
-<td style="text-align: right;"><strong>0.531</strong></td>
-</tr>
-<tr>
-<td>EWMA4 단독</td>
-<td style="text-align: right;">497</td>
-<td style="text-align: right;">52.31%</td>
-<td style="text-align: right;">50.65%</td>
-<td style="text-align: right;">0.510</td>
-<td style="text-align: right;">0.545</td>
-</tr>
-<tr>
-<td>XGBoost 주 예측</td>
-<td style="text-align: right;">497</td>
-<td style="text-align: right;">51.71%</td>
-<td style="text-align: right;">49.31%</td>
-<td style="text-align: right;">0.496</td>
-<td style="text-align: right;">0.547</td>
-</tr>
-<tr>
-<td>직전 Stuff+</td>
-<td style="text-align: right;">497</td>
-<td style="text-align: right;">49.90%</td>
-<td style="text-align: right;">47.94%</td>
-<td style="text-align: right;">0.480</td>
-<td style="text-align: right;">0.610</td>
-</tr>
-<tr>
-<td>학습기간에서 가장 많았던 범주</td>
-<td style="text-align: right;">497</td>
-<td style="text-align: right;">42.86%</td>
-<td style="text-align: right;">33.33%</td>
-<td style="text-align: right;">0.200</td>
-<td style="text-align: right;">0.819</td>
-</tr>
-</tbody>
-</table>
-<p>Ridge가 XGBoost보다 6건 더 맞혔고 EWMA4보다는 3건 더 맞혔다. 최적화 XGBoost는 기존
-고정 XGBoost보다 4건을 추가로 맞혔다. 2025년 결과는 두 모델의 설명과 비교에만 사용했으며,
-이 결과를 근거로 모델 설정을 다시 바꾸지 않았다.</p>
-<h3 id="xgboost-1">8.1 XGBoost 혼동행렬</h3>
-<section class="viz" aria-label="두 모델 혼동행렬 히트맵">
-<p class="viz-title">범주별 예측 분포</p>
-<p class="viz-note">행은 실제 범주, 열은 예측 범주다. 파란 테두리는 정답 셀이고 색이 진할수록 등판 수가 많다.</p>
-<div class="matrix-grid">
-<div><div class="matrix-caption">XGBoost</div><div class="matrix"><div></div><div class="head">예측 Low</div><div class="head">Middle</div><div class="head">High</div><div class="head">실제 Low</div><div class="cell diag" style="background:#3d78bf;color:#fff">129</div><div class="cell" style="background:#94b8df">70</div><div class="cell" style="background:#e3edf8">14</div><div class="head">Middle</div><div class="cell" style="background:#c4d8ed">35</div><div class="cell diag" style="background:#78a4d3">87</div><div class="cell" style="background:#bad2e9">39</div><div class="head">실제 High</div><div class="cell" style="background:#dce8f5">18</div><div class="cell" style="background:#9fbee1">64</div><div class="cell diag" style="background:#b6cee8">41</div></div></div>
-<div><div class="matrix-caption">Ridge</div><div class="matrix"><div></div><div class="head">예측 Low</div><div class="head">Middle</div><div class="head">High</div><div class="head">실제 Low</div><div class="cell diag" style="background:#407bc1;color:#fff">128</div><div class="cell" style="background:#94b8df">70</div><div class="cell" style="background:#e1ecf7">15</div><div class="head">Middle</div><div class="cell" style="background:#c2d7ec">36</div><div class="cell diag" style="background:#78a4d3">87</div><div class="cell" style="background:#bdd4ea">38</div><div class="head">실제 High</div><div class="cell" style="background:#e1ecf7">15</div><div class="cell" style="background:#a8c4e3">60</div><div class="cell diag" style="background:#aec9e6">48</div></div></div>
-</div>
-<p class="takeaway"><strong>핵심:</strong> 두 모델 모두 Low는 잘 구분하지만 High 재현이 어렵다. Ridge는 실제 High 123건 중 48건을 맞혀 XGBoost보다 7건 많다.</p>
-</section>
-<table>
-<thead>
-<tr>
-<th>실제＼예측</th>
-<th style="text-align: right;">Low</th>
-<th style="text-align: right;">Middle</th>
-<th style="text-align: right;">High</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Low</td>
-<td style="text-align: right;"><strong>129</strong></td>
-<td style="text-align: right;">70</td>
-<td style="text-align: right;">14</td>
-</tr>
-<tr>
-<td>Middle</td>
-<td style="text-align: right;">35</td>
-<td style="text-align: right;"><strong>87</strong></td>
-<td style="text-align: right;">39</td>
-</tr>
-<tr>
-<td>High</td>
-<td style="text-align: right;">18</td>
-<td style="text-align: right;">64</td>
-<td style="text-align: right;"><strong>41</strong></td>
-</tr>
-</tbody>
-</table>
-<h3 id="ridge-1">8.2 Ridge 혼동행렬</h3>
-<table>
-<thead>
-<tr>
-<th>실제＼예측</th>
-<th style="text-align: right;">Low</th>
-<th style="text-align: right;">Middle</th>
-<th style="text-align: right;">High</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Low</td>
-<td style="text-align: right;"><strong>128</strong></td>
-<td style="text-align: right;">70</td>
-<td style="text-align: right;">15</td>
-</tr>
-<tr>
-<td>Middle</td>
-<td style="text-align: right;">36</td>
-<td style="text-align: right;"><strong>87</strong></td>
-<td style="text-align: right;">38</td>
-</tr>
-<tr>
-<td>High</td>
-<td style="text-align: right;">15</td>
-<td style="text-align: right;">60</td>
-<td style="text-align: right;"><strong>48</strong></td>
-</tr>
-</tbody>
-</table>
-<p>Ridge는 XGBoost보다 High를 7건 더 맞혔고 Low는 1건, Middle은 같았다.</p>
-<h2 id="section-12">9. 두 모델의 일치와 활용</h2>
-<table>
-<thead>
-<tr>
-<th>구분</th>
-<th style="text-align: right;">등판 수</th>
-<th style="text-align: right;">비율 또는 정확도</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>같은 범주 예측</td>
-<td style="text-align: right;">455</td>
-<td style="text-align: right;">91.55%</td>
-</tr>
-<tr>
-<td>다른 범주 예측</td>
-<td style="text-align: right;">42</td>
-<td style="text-align: right;">8.45%</td>
-</tr>
-<tr>
-<td>일치 구간 정확도</td>
-<td style="text-align: right;">455</td>
-<td style="text-align: right;">53.41%</td>
-</tr>
-<tr>
-<td>불일치 구간 XGBoost 정확도</td>
-<td style="text-align: right;">42</td>
-<td style="text-align: right;">33.33%</td>
-</tr>
-<tr>
-<td>불일치 구간 Ridge 정확도</td>
-<td style="text-align: right;">42</td>
-<td style="text-align: right;">47.62%</td>
-</tr>
-</tbody>
-</table>
-<p>권장 출력 방식은 다음과 같다.</p>
-<ul>
-<li>두 모델의 범주가 같으면 <code>agreement=True</code>로 함께 제시한다.</li>
-<li>다르면 예측 불확실성이 높은 등판으로 표시한다.</li>
-<li>XGBoost 결과에는 Ridge 결과와 주요 계수 방향을 함께 제공한다.</li>
-<li>현재 데이터만으로 두 모델의 평균이나 투표 규칙을 새로 조정하지 않는다.</li>
-</ul>
-<h2 id="section-13">10. 선수별 2025 결과</h2>
-<table>
-<thead>
-<tr>
-<th>투수</th>
-<th style="text-align: right;">N</th>
-<th style="text-align: right;">XGBoost</th>
-<th style="text-align: right;">Ridge</th>
-<th style="text-align: right;">두 모델 일치율</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>José Berríos</td>
-<td style="text-align: right;">27</td>
-<td style="text-align: right;">92.6%</td>
-<td style="text-align: right;">92.6%</td>
-<td style="text-align: right;">100.0%</td>
-</tr>
-<tr>
-<td>Mitch Keller</td>
-<td style="text-align: right;">29</td>
-<td style="text-align: right;">82.8%</td>
-<td style="text-align: right;">82.8%</td>
-<td style="text-align: right;">100.0%</td>
-</tr>
-<tr>
-<td>Zac Gallen</td>
-<td style="text-align: right;">30</td>
-<td style="text-align: right;">76.7%</td>
-<td style="text-align: right;">73.3%</td>
-<td style="text-align: right;">96.7%</td>
-</tr>
-<tr>
-<td>Luis Castillo</td>
-<td style="text-align: right;">29</td>
-<td style="text-align: right;">75.9%</td>
-<td style="text-align: right;">69.0%</td>
-<td style="text-align: right;">93.1%</td>
-</tr>
-<tr>
-<td>Kyle Freeland</td>
-<td style="text-align: right;">25</td>
-<td style="text-align: right;">60.0%</td>
-<td style="text-align: right;">64.0%</td>
-<td style="text-align: right;">88.0%</td>
-</tr>
-<tr>
-<td>Kevin Gausman</td>
-<td style="text-align: right;">29</td>
-<td style="text-align: right;">55.2%</td>
-<td style="text-align: right;">58.6%</td>
-<td style="text-align: right;">89.7%</td>
-</tr>
-<tr>
-<td>Zack Wheeler</td>
-<td style="text-align: right;">21</td>
-<td style="text-align: right;">57.1%</td>
-<td style="text-align: right;">57.1%</td>
-<td style="text-align: right;">100.0%</td>
-</tr>
-<tr>
-<td>Brady Singer</td>
-<td style="text-align: right;">29</td>
-<td style="text-align: right;">55.2%</td>
-<td style="text-align: right;">51.7%</td>
-<td style="text-align: right;">93.1%</td>
-</tr>
-<tr>
-<td>Charlie Morton</td>
-<td style="text-align: right;">22</td>
-<td style="text-align: right;">45.5%</td>
-<td style="text-align: right;">50.0%</td>
-<td style="text-align: right;">90.9%</td>
-</tr>
-<tr>
-<td>Michael Wacha</td>
-<td style="text-align: right;">27</td>
-<td style="text-align: right;">44.4%</td>
-<td style="text-align: right;">48.1%</td>
-<td style="text-align: right;">96.3%</td>
-</tr>
-<tr>
-<td>Tyler Anderson</td>
-<td style="text-align: right;">23</td>
-<td style="text-align: right;">56.5%</td>
-<td style="text-align: right;">47.8%</td>
-<td style="text-align: right;">91.3%</td>
-</tr>
-<tr>
-<td>Jameson Taillon</td>
-<td style="text-align: right;">17</td>
-<td style="text-align: right;">41.2%</td>
-<td style="text-align: right;">47.1%</td>
-<td style="text-align: right;">88.2%</td>
-</tr>
-<tr>
-<td>Logan Gilbert</td>
-<td style="text-align: right;">18</td>
-<td style="text-align: right;">38.9%</td>
-<td style="text-align: right;">44.4%</td>
-<td style="text-align: right;">94.4%</td>
-</tr>
-<tr>
-<td>Sonny Gray</td>
-<td style="text-align: right;">28</td>
-<td style="text-align: right;">32.1%</td>
-<td style="text-align: right;">42.9%</td>
-<td style="text-align: right;">85.7%</td>
-</tr>
-<tr>
-<td>Logan Webb</td>
-<td style="text-align: right;">31</td>
-<td style="text-align: right;">35.5%</td>
-<td style="text-align: right;">38.7%</td>
-<td style="text-align: right;">90.3%</td>
-</tr>
-<tr>
-<td>Chris Bassitt</td>
-<td style="text-align: right;">28</td>
-<td style="text-align: right;">42.9%</td>
-<td style="text-align: right;">35.7%</td>
-<td style="text-align: right;">92.9%</td>
-</tr>
-<tr>
-<td>Dylan Cease</td>
-<td style="text-align: right;">29</td>
-<td style="text-align: right;">24.1%</td>
-<td style="text-align: right;">34.5%</td>
-<td style="text-align: right;">82.8%</td>
-</tr>
-<tr>
-<td>Patrick Corbin</td>
-<td style="text-align: right;">27</td>
-<td style="text-align: right;">22.2%</td>
-<td style="text-align: right;">33.3%</td>
-<td style="text-align: right;">88.9%</td>
-</tr>
-<tr>
-<td>Framber Valdez</td>
-<td style="text-align: right;">28</td>
-<td style="text-align: right;">35.7%</td>
-<td style="text-align: right;">28.6%</td>
-<td style="text-align: right;">78.6%</td>
-</tr>
-</tbody>
-</table>
-<p>선수별 편차가 매우 크다. 상위 선수에서는 한 시즌의 범주가 특정 상태에 오래 머문 반면,
-하위 선수에서는 2025 분포 변화와 경기별 변동을 두 모델 모두 충분히 설명하지 못했다.
-따라서 전체 정확도를 모든 투수에게 동일하게 적용되는 품질로 해석하면 안 된다.</p>
-<h2 id="ridge-2">11. Ridge가 중요하게 본 입력 정보</h2>
-<p>아래 값은 각 입력 정보가 기본 예상값을 어느 방향으로 얼마나 보정했는지를 나타낸다.
-선수마다 단위가 다른 문제를 줄이기 위해 각 투수의 학습 데이터 안에서 입력값의 척도를
-맞췄으며, 표에는 19명 계수의 중앙값을 제시했다.</p>
-<table>
-<thead>
-<tr>
-<th>입력 정보</th>
-<th style="text-align: right;">계수 중앙값</th>
-<th style="text-align: right;">영향 크기 중앙값</th>
-<th style="text-align: right;">양수 선수 비율</th>
-<th>해석</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>stuff_plus_slope_last5</code></td>
-<td style="text-align: right;">-0.189</td>
-<td style="text-align: right;">0.189</td>
-<td style="text-align: right;">0.0%</td>
-<td>최근 상승 뒤 낮아지고 하락 뒤 높아지는 방향으로 보정</td>
-</tr>
-<tr>
-<td><code>prior_minus_ewma4</code></td>
-<td style="text-align: right;">-0.138</td>
-<td style="text-align: right;">0.138</td>
-<td style="text-align: right;">15.8%</td>
-<td>직전 경기의 EWMA 이탈을 반대 방향으로 조정</td>
-</tr>
-<tr>
-<td><code>release_spin_rate_slope5</code></td>
-<td style="text-align: right;">-0.001</td>
-<td style="text-align: right;">0.128</td>
-<td style="text-align: right;">47.4%</td>
-<td>영향 크기는 있으나 선수별 방향이 다름</td>
-</tr>
-<tr>
-<td><code>mean5_minus_ewma4</code></td>
-<td style="text-align: right;">+0.119</td>
-<td style="text-align: right;">0.119</td>
-<td style="text-align: right;">94.7%</td>
-<td>최근 5경기 평균이 EWMA보다 높으면 양의 보정</td>
-</tr>
-<tr>
-<td><code>arm_angle_slope5</code></td>
-<td style="text-align: right;">+0.039</td>
-<td style="text-align: right;">0.113</td>
-<td style="text-align: right;">57.9%</td>
-<td>선수별 이질성이 큰 보조 신호</td>
-</tr>
-<tr>
-<td><code>prev_start_pitch_count</code></td>
-<td style="text-align: right;">-0.041</td>
-<td style="text-align: right;">0.107</td>
-<td style="text-align: right;">31.6%</td>
-<td>직전 투구 수 증가가 대체로 약한 음의 보정</td>
-</tr>
-<tr>
-<td><code>release_speed_slope5</code></td>
-<td style="text-align: right;">-0.016</td>
-<td style="text-align: right;">0.107</td>
-<td style="text-align: right;">36.8%</td>
-<td>구속 변화의 방향은 선수별로 다름</td>
-</tr>
-</tbody>
-</table>
-<p>가장 일관된 신호는 최근 크게 오르거나 내린 Stuff+가 다시 평소 수준으로 돌아오는 경향이다.
-<code>stuff_plus_slope_last5</code>는 19명 모두 음수였고,
-<code>mean5_minus_ewma4</code>는 19명 중 18명에서 양수였다. 반면 회전수·암 슬롯·구속 변화는 절댓값이
-커도 부호가 엇갈리므로 전 리그에 동일한 인과 방향이 있다고 해석하면 안 된다.</p>
-<h2 id="section-14">12. 한계</h2>
-<ol>
-<li>최종 성능평가가 2025년 한 시즌에만 이루어졌다.</li>
-<li>투수별 모델이라 각 모델의 학습 표본이 작다.</li>
-<li>입력값이나 정답에 결측이 있는 2025년 63등판을 제외했다.</li>
-<li>2021~2025년 매년 20회 이상 선발한 투수만 포함했으므로 부상·보직 변경이 있었던 투수에게 같은 성능을 기대하기 어렵다.</li>
-<li>2025년 선발 등판 수까지 확인해 평가 선수를 정했기 때문에 표본 선택 편향이 있을 수 있다.</li>
-<li>최종 코드는 2025년 결과를 모델 선택에 사용하지 않지만, 연구자가 초기 탐색 과정에서
-2025년 결과를 확인했던 사실은 되돌릴 수 없다.</li>
-<li>Ridge를 보조 모델로 함께 제시하기로 한 결정은 첫 XGBoost 최종 평가 이후 이루어졌다.
-Ridge 설정 자체는 2023·2024년 검증만으로 정했지만, Ridge의 2025년 성능은 보조 결과로
-해석하는 것이 안전하다.</li>
-</ol>
-<h2 id="section-15">13. 재현 방법</h2>
-<pre><code class="language-powershell">.\.venv\Scripts\python.exe search_xgboost_fast.py `
-  --statcast-dir data/statcast_mlb_stable_starters_2020 data/statcast_mlb_stable_starters_2021_2025 `
-  --stuff data/fangraphs_stuff_mlb_stable_starters_2020.parquet data/fangraphs_stuff_mlb_stable_starters_2021_2025.parquet `
-  --output-dir experiments/runs/xgboost_fast_search_2020_2025
-
-.\.venv\Scripts\python.exe stuff_mlb_temporal_final.py `
-  --statcast-dir data/statcast_mlb_stable_starters_2020 data/statcast_mlb_stable_starters_2021_2025 `
-  --stuff data/fangraphs_stuff_mlb_stable_starters_2020.parquet data/fangraphs_stuff_mlb_stable_starters_2021_2025.parquet `
-  --official-stats data/mlb_official_pitching_2021_2025.parquet `
-  --output-dir experiments/runs/mlb_stuff_temporal_selected_2020_2025
-</code></pre>
-<table>
-<thead>
-<tr>
-<th>파일</th>
-<th>내용</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>locked_xgboost_config.json</code></td>
-<td>결정론적으로 잠근 XGBoost 파라미터와 검증·진단 성능</td>
-</tr>
-<tr>
-<td><code>stage1_32_candidates_2023.csv</code></td>
-<td>1단계 TPE 후보</td>
-</tr>
-<tr>
-<td><code>stage2_top10_2023_2024.csv</code></td>
-<td>2단계 생존 후보</td>
-</tr>
-<tr>
-<td><code>stage3_top3_2022_2024.csv</code></td>
-<td>최종 3개 후보</td>
-</tr>
-<tr>
-<td><code>locked_xgboost_2025_predictions.parquet</code></td>
-<td>최종 XGBoost의 2025 예측</td>
-</tr>
-<tr>
-<td><code>tuned_xgboost_vs_ridge_2025.parquet</code></td>
-<td>최적화 XGBoost와 Ridge 경기별 비교</td>
-</tr>
-<tr>
-<td><code>validation_candidates.csv</code></td>
-<td>2025 제외 후보 222개의 검증 성능과 순위</td>
-</tr>
-<tr>
-<td><code>pooled_metrics.csv</code></td>
-<td>두 모델과 기준선의 2025 전체 성능</td>
-</tr>
-<tr>
-<td><code>per_pitcher_metrics.csv</code></td>
-<td>선수별 모델 성능</td>
-</tr>
-<tr>
-<td><code>dual_model_comparison.parquet</code></td>
-<td>경기별 두 모델 예측과 일치 여부</td>
-</tr>
-<tr>
-<td><code>ridge_coefficients.csv</code></td>
-<td>19명 × 16피처 표준화 계수</td>
-</tr>
-<tr>
-<td><code>ridge_feature_summary.csv</code></td>
-<td>계수 중앙값·사분위수·부호 일관성</td>
-</tr>
-<tr>
-<td><code>confusion_matrix_xgboost.csv</code></td>
-<td>XGBoost 혼동행렬</td>
-</tr>
-<tr>
-<td><code>confusion_matrix_ridge.csv</code></td>
-<td>Ridge 혼동행렬</td>
-</tr>
-<tr>
-<td><code>predictions.parquet</code></td>
-<td>경기별 모든 예측</td>
-</tr>
-<tr>
-<td><code>report.json</code></td>
-<td>선택 규칙, 이중 모델 설정, 성능과 일치율</td>
-</tr>
-</tbody>
-</table>
-<h2 id="section-16">14. 결론</h2>
-<p>XGBoost와 Ridge는 2025 이전 검증만으로 설정을 확정했다. 최적화 XGBoost는 Ridge보다
-검증의 범주별 평균 정확도가 0.517%p 높아 주 모델 조건을 통과했다. 2025년에는 Ridge가
-정확도 52.92%로 XGBoost의 51.71%보다 높았고, 두 모델은 91.55%의 등판에서 같은 범주를
-냈다. 따라서 XGBoost의 비선형 예측과 Ridge의 안정적·해석 가능한
-보조 예측을 함께 제공한다. 다음 시즌에는 설정을 다시 손대지 않고 실제 새 등판에 적용해
-성능이 유지되는지 확인해야 한다.</p>
-<p>최종적으로 이 모델의 실질적인 기반은 최근 Stuff+ 흐름을 반영한 4경기 가중평균이다.
-XGBoost와 Ridge는 이 기본 예상값을 조금 조정하며, 2025년에서 가장 좋은 Ridge도
-4경기 가중평균만 사용했을 때보다 3경기를 더 맞힌 정도다. 그러므로 복잡한 모델 자체보다
-모델 선택 자료와 최종 평가 자료를 분리하고, 과적합을 강하게 억제하며, 두 모델의 일치 여부와
-선수별 성능 편차를 함께 보여주는 것이 더 중요하다.</p>
-</main></body></html>
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Stuff+ 통합 예측 보고서</title><style>
+    :root{--bg:#f4f7fb;--card:#fff;--ink:#172033;--muted:#61708a;--accent:#2457d6;--line:#dce3ee}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,'Segoe UI',sans-serif}
+    main{max-width:1500px;margin:auto;padding:32px} h1{font-size:34px;margin:0 0 8px} h2{margin-top:38px;border-bottom:2px solid var(--line);padding-bottom:8px}
+    .lead{color:var(--muted);font-size:17px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:22px 0}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}.card b{font-size:24px;color:var(--accent);display:block}
+    .table-wrap{overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:10px} table.data{border-collapse:collapse;width:100%;font-size:13px}
+    table.data th,table.data td{padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:right} table.data th{position:sticky;top:0;background:#eef3fb;color:#33415c}
+    table.data th:first-child,table.data td:first-child{text-align:left} code{background:#e9eef7;padding:2px 5px;border-radius:4px} details{background:#fff;border:1px solid var(--line);border-radius:8px;margin:8px 0;padding:10px}
+    summary{cursor:pointer;font-weight:700}.note{background:#fff7dc;border-left:4px solid #e4a900;padding:12px 16px}.ok{background:#eaf7ef;border-left:4px solid #2b9b59;padding:12px 16px}
+    </style></head><body><main>
+    <h1>Stuff+ 통합 예측 보고서</h1><p class="lead">EWMA4 · 선수별 Ridge · XGBoost · Shared TCN | 생성 2026-08-04T23:06:34+09:00</p>
+    <div class="ok"><b>결론:</b> TCN은 버린 모델이 아니다. 기존 검증에서 주 모델 교체 기준을 넘지 못해 진단 모델로 남았지만, 여기서는 같은 고정 설정으로 2025 전체와 선수별 최근 연속 예측을 함께 표시한다.</div>
+    <div class="cards"><div class="card"><b>19</b>대상 선수</div><div class="card"><b>560</b>2025 대상 경기</div><div class="card"><b>497</b>공통 비교 경기</div><div class="card"><b>304</b>Ridge 계수</div></div>
+    <h2>1. 데이터와 검증 계약</h2><p>2020–2024만 학습하고 2025를 한 번 예측했다. 선수 자격은 2021–2025 매년 공식 선발 20경기 이상이다. q33/q67과 전처리 통계는 모두 2024년까지의 학습 데이터에서 계산한다.</p>
+    <p class="note">선수 자격 확인에는 2025 출전 여부가 사용되므로 완전한 사전 배포 시뮬레이션은 아니다. 다만 2025 Stuff+ 결과값은 모델 선택이나 학습에 사용하지 않는다.</p>
+    <h2>2. 모델 설정</h2><ul><li><b>EWMA4:</b> 최근 경기 Stuff+ span 4.</li><li><b>Ridge:</b> 선수별 compact16, alpha=100, residual correction scale=0.25.</li><li><b>XGBoost:</b> 선수별 compact16, validation trial 16, trees=100, depth=2, residual correction scale=0.221845.</li><li><b>TCN:</b> shared causal H1, ordered L=8, channels=4, bottleneck=4, dilation 1/2/4, alpha=0.1, epochs=250, 5 seeds 평균.</li></ul>
+    <p>네 모델 모두 최종 연속값을 <code>예측 Stuff+ = EWMA4 + 보정 residual</code> 구조로 만든다. TCN은 시간 순서를 학습하고 XGBoost는 비선형 상호작용을 허용하지만, 둘 다 Ridge처럼 계수 하나로 직접 해석할 수는 없다.</p>
+    <h2>3. 2025 공통 표본 성능</h2><div class="table-wrap"><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>model</th>
+      <th>n_total_eligible</th>
+      <th>n_predicted</th>
+      <th>coverage</th>
+      <th>n_evaluated</th>
+      <th>accuracy</th>
+      <th>ordinal_mae</th>
+      <th>low_precision</th>
+      <th>low_recall</th>
+      <th>low_f1</th>
+      <th>true_low_count</th>
+      <th>predicted_low_count</th>
+      <th>predicted_low_rate</th>
+      <th>middle_precision</th>
+      <th>middle_recall</th>
+      <th>middle_f1</th>
+      <th>true_middle_count</th>
+      <th>predicted_middle_count</th>
+      <th>predicted_middle_rate</th>
+      <th>high_precision</th>
+      <th>high_recall</th>
+      <th>high_f1</th>
+      <th>true_high_count</th>
+      <th>predicted_high_count</th>
+      <th>predicted_high_rate</th>
+      <th>balanced_accuracy</th>
+      <th>macro_f1</th>
+      <th>low_to_high_error_count</th>
+      <th>high_to_low_error_count</th>
+      <th>low_to_high_error_rate</th>
+      <th>high_to_low_error_rate</th>
+      <th>extreme_error_count</th>
+      <th>extreme_error_rate</th>
+      <th>continuous_n</th>
+      <th>mae</th>
+      <th>rmse</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>EWMA4</td>
+      <td>497</td>
+      <td>497</td>
+      <td>1.0</td>
+      <td>497</td>
+      <td>0.4909</td>
+      <td>0.5694</td>
+      <td>0.6784</td>
+      <td>0.5604</td>
+      <td>0.6138</td>
+      <td>207</td>
+      <td>171</td>
+      <td>0.3441</td>
+      <td>0.3684</td>
+      <td>0.5153</td>
+      <td>0.4297</td>
+      <td>163</td>
+      <td>228</td>
+      <td>0.4588</td>
+      <td>0.4490</td>
+      <td>0.3465</td>
+      <td>0.3911</td>
+      <td>127</td>
+      <td>98</td>
+      <td>0.1972</td>
+      <td>0.4741</td>
+      <td>0.4782</td>
+      <td>16</td>
+      <td>14</td>
+      <td>0.0773</td>
+      <td>0.1102</td>
+      <td>30</td>
+      <td>0.0604</td>
+      <td>560</td>
+      <td>4.3213</td>
+      <td>5.6352</td>
+    </tr>
+    <tr>
+      <td>Ridge</td>
+      <td>497</td>
+      <td>497</td>
+      <td>1.0</td>
+      <td>497</td>
+      <td>0.5010</td>
+      <td>0.5553</td>
+      <td>0.6901</td>
+      <td>0.5700</td>
+      <td>0.6243</td>
+      <td>207</td>
+      <td>171</td>
+      <td>0.3441</td>
+      <td>0.3733</td>
+      <td>0.5153</td>
+      <td>0.4330</td>
+      <td>163</td>
+      <td>225</td>
+      <td>0.4527</td>
+      <td>0.4653</td>
+      <td>0.3701</td>
+      <td>0.4123</td>
+      <td>127</td>
+      <td>101</td>
+      <td>0.2032</td>
+      <td>0.4852</td>
+      <td>0.4899</td>
+      <td>15</td>
+      <td>13</td>
+      <td>0.0725</td>
+      <td>0.1024</td>
+      <td>28</td>
+      <td>0.0563</td>
+      <td>497</td>
+      <td>4.3568</td>
+      <td>5.6883</td>
+    </tr>
+    <tr>
+      <td>TCN</td>
+      <td>497</td>
+      <td>497</td>
+      <td>1.0</td>
+      <td>497</td>
+      <td>0.4990</td>
+      <td>0.5594</td>
+      <td>0.6928</td>
+      <td>0.5556</td>
+      <td>0.6166</td>
+      <td>207</td>
+      <td>166</td>
+      <td>0.3340</td>
+      <td>0.3787</td>
+      <td>0.5460</td>
+      <td>0.4472</td>
+      <td>163</td>
+      <td>235</td>
+      <td>0.4728</td>
+      <td>0.4583</td>
+      <td>0.3465</td>
+      <td>0.3946</td>
+      <td>127</td>
+      <td>96</td>
+      <td>0.1932</td>
+      <td>0.4827</td>
+      <td>0.4862</td>
+      <td>16</td>
+      <td>13</td>
+      <td>0.0773</td>
+      <td>0.1024</td>
+      <td>29</td>
+      <td>0.0584</td>
+      <td>560</td>
+      <td>4.3010</td>
+      <td>5.6056</td>
+    </tr>
+    <tr>
+      <td>XGBoost</td>
+      <td>497</td>
+      <td>497</td>
+      <td>1.0</td>
+      <td>497</td>
+      <td>0.5010</td>
+      <td>0.5594</td>
+      <td>0.6879</td>
+      <td>0.5749</td>
+      <td>0.6263</td>
+      <td>207</td>
+      <td>173</td>
+      <td>0.3481</td>
+      <td>0.3756</td>
+      <td>0.5092</td>
+      <td>0.4323</td>
+      <td>163</td>
+      <td>221</td>
+      <td>0.4447</td>
+      <td>0.4563</td>
+      <td>0.3701</td>
+      <td>0.4087</td>
+      <td>127</td>
+      <td>103</td>
+      <td>0.2072</td>
+      <td>0.4847</td>
+      <td>0.4891</td>
+      <td>16</td>
+      <td>14</td>
+      <td>0.0773</td>
+      <td>0.1102</td>
+      <td>30</td>
+      <td>0.0604</td>
+      <td>497</td>
+      <td>4.3802</td>
+      <td>5.7054</td>
+    </tr>
+  </tbody>
+</table></div>
+    <h2>4. 모델별 배포 가능 표본</h2><div class="table-wrap"><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>model</th>
+      <th>n_total_eligible</th>
+      <th>n_predicted</th>
+      <th>coverage</th>
+      <th>n_evaluated</th>
+      <th>accuracy</th>
+      <th>ordinal_mae</th>
+      <th>low_precision</th>
+      <th>low_recall</th>
+      <th>low_f1</th>
+      <th>true_low_count</th>
+      <th>predicted_low_count</th>
+      <th>predicted_low_rate</th>
+      <th>middle_precision</th>
+      <th>middle_recall</th>
+      <th>middle_f1</th>
+      <th>true_middle_count</th>
+      <th>predicted_middle_count</th>
+      <th>predicted_middle_rate</th>
+      <th>high_precision</th>
+      <th>high_recall</th>
+      <th>high_f1</th>
+      <th>true_high_count</th>
+      <th>predicted_high_count</th>
+      <th>predicted_high_rate</th>
+      <th>balanced_accuracy</th>
+      <th>macro_f1</th>
+      <th>low_to_high_error_count</th>
+      <th>high_to_low_error_count</th>
+      <th>low_to_high_error_rate</th>
+      <th>high_to_low_error_rate</th>
+      <th>extreme_error_count</th>
+      <th>extreme_error_rate</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>EWMA4</td>
+      <td>560</td>
+      <td>560</td>
+      <td>1.0000</td>
+      <td>560</td>
+      <td>0.5018</td>
+      <td>0.5571</td>
+      <td>0.6667</td>
+      <td>0.5639</td>
+      <td>0.6110</td>
+      <td>227</td>
+      <td>192</td>
+      <td>0.3429</td>
+      <td>0.3867</td>
+      <td>0.5266</td>
+      <td>0.4459</td>
+      <td>188</td>
+      <td>256</td>
+      <td>0.4571</td>
+      <td>0.4821</td>
+      <td>0.3724</td>
+      <td>0.4202</td>
+      <td>145</td>
+      <td>112</td>
+      <td>0.2000</td>
+      <td>0.4876</td>
+      <td>0.4924</td>
+      <td>17</td>
+      <td>16</td>
+      <td>0.0749</td>
+      <td>0.1103</td>
+      <td>33</td>
+      <td>0.0589</td>
+    </tr>
+    <tr>
+      <td>Ridge</td>
+      <td>560</td>
+      <td>497</td>
+      <td>0.8875</td>
+      <td>497</td>
+      <td>0.5010</td>
+      <td>0.5553</td>
+      <td>0.6901</td>
+      <td>0.5700</td>
+      <td>0.6243</td>
+      <td>207</td>
+      <td>171</td>
+      <td>0.3441</td>
+      <td>0.3733</td>
+      <td>0.5153</td>
+      <td>0.4330</td>
+      <td>163</td>
+      <td>225</td>
+      <td>0.4527</td>
+      <td>0.4653</td>
+      <td>0.3701</td>
+      <td>0.4123</td>
+      <td>127</td>
+      <td>101</td>
+      <td>0.2032</td>
+      <td>0.4852</td>
+      <td>0.4899</td>
+      <td>15</td>
+      <td>13</td>
+      <td>0.0725</td>
+      <td>0.1024</td>
+      <td>28</td>
+      <td>0.0563</td>
+    </tr>
+    <tr>
+      <td>TCN</td>
+      <td>560</td>
+      <td>560</td>
+      <td>1.0000</td>
+      <td>560</td>
+      <td>0.5125</td>
+      <td>0.5429</td>
+      <td>0.6809</td>
+      <td>0.5639</td>
+      <td>0.6169</td>
+      <td>227</td>
+      <td>188</td>
+      <td>0.3357</td>
+      <td>0.3977</td>
+      <td>0.5585</td>
+      <td>0.4646</td>
+      <td>188</td>
+      <td>264</td>
+      <td>0.4714</td>
+      <td>0.5000</td>
+      <td>0.3724</td>
+      <td>0.4269</td>
+      <td>145</td>
+      <td>108</td>
+      <td>0.1929</td>
+      <td>0.4983</td>
+      <td>0.5028</td>
+      <td>16</td>
+      <td>15</td>
+      <td>0.0705</td>
+      <td>0.1034</td>
+      <td>31</td>
+      <td>0.0554</td>
+    </tr>
+    <tr>
+      <td>XGBoost</td>
+      <td>560</td>
+      <td>497</td>
+      <td>0.8875</td>
+      <td>497</td>
+      <td>0.5010</td>
+      <td>0.5594</td>
+      <td>0.6879</td>
+      <td>0.5749</td>
+      <td>0.6263</td>
+      <td>207</td>
+      <td>173</td>
+      <td>0.3481</td>
+      <td>0.3756</td>
+      <td>0.5092</td>
+      <td>0.4323</td>
+      <td>163</td>
+      <td>221</td>
+      <td>0.4447</td>
+      <td>0.4563</td>
+      <td>0.3701</td>
+      <td>0.4087</td>
+      <td>127</td>
+      <td>103</td>
+      <td>0.2072</td>
+      <td>0.4847</td>
+      <td>0.4891</td>
+      <td>16</td>
+      <td>14</td>
+      <td>0.0773</td>
+      <td>0.1102</td>
+      <td>30</td>
+      <td>0.0604</td>
+    </tr>
+  </tbody>
+</table></div>
+    <h2>5. 선수별 최근 경기 연속 예측</h2><p>실제값은 검증용으로만 표시한다. 예측에는 해당 경기보다 앞선 기록만 사용한다.</p><div class="table-wrap"><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>선수</th>
+      <th>MLBAM</th>
+      <th>최근 경기</th>
+      <th>game_pk</th>
+      <th>실제 Stuff+</th>
+      <th>실제 등급</th>
+      <th>q33</th>
+      <th>q67</th>
+      <th>EWMA4 예측</th>
+      <th>EWMA4 등급</th>
+      <th>Ridge 예측</th>
+      <th>Ridge 등급</th>
+      <th>TCN 예측</th>
+      <th>TCN 등급</th>
+      <th>XGBoost 예측</th>
+      <th>XGBoost 등급</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Brady Singer</td>
+      <td>663903</td>
+      <td>2025-09-28</td>
+      <td>776144</td>
+      <td>95.622</td>
+      <td>2</td>
+      <td>89.946</td>
+      <td>95.022</td>
+      <td>98.220</td>
+      <td>2.0</td>
+      <td>97.966</td>
+      <td>2.0</td>
+      <td>97.954</td>
+      <td>2.0</td>
+      <td>97.860</td>
+      <td>2.0</td>
+    </tr>
+    <tr>
+      <td>Charlie Morton</td>
+      <td>450203</td>
+      <td>2025-09-13</td>
+      <td>776347</td>
+      <td>95.557</td>
+      <td>0</td>
+      <td>98.540</td>
+      <td>104.556</td>
+      <td>96.239</td>
+      <td>0.0</td>
+      <td>96.408</td>
+      <td>0.0</td>
+      <td>96.310</td>
+      <td>0.0</td>
+      <td>96.402</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <td>Chris Bassitt</td>
+      <td>605135</td>
+      <td>2025-09-18</td>
+      <td>776269</td>
+      <td>92.514</td>
+      <td>0</td>
+      <td>98.229</td>
+      <td>103.128</td>
+      <td>95.034</td>
+      <td>0.0</td>
+      <td>95.141</td>
+      <td>0.0</td>
+      <td>95.211</td>
+      <td>0.0</td>
+      <td>95.380</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <td>Dylan Cease</td>
+      <td>656302</td>
+      <td>2025-09-24</td>
+      <td>776198</td>
+      <td>108.464</td>
+      <td>1</td>
+      <td>104.132</td>
+      <td>108.993</td>
+      <td>104.682</td>
+      <td>1.0</td>
+      <td>105.085</td>
+      <td>1.0</td>
+      <td>104.822</td>
+      <td>1.0</td>
+      <td>104.720</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <td>Framber Valdez</td>
+      <td>664285</td>
+      <td>2025-09-25</td>
+      <td>776182</td>
+      <td>108.153</td>
+      <td>2</td>
+      <td>102.487</td>
+      <td>108.112</td>
+      <td>103.263</td>
+      <td>1.0</td>
+      <td>103.030</td>
+      <td>1.0</td>
+      <td>103.430</td>
+      <td>1.0</td>
+      <td>103.703</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <td>Jameson Taillon</td>
+      <td>592791</td>
+      <td>2025-09-27</td>
+      <td>776164</td>
+      <td>92.587</td>
+      <td>0</td>
+      <td>94.826</td>
+      <td>98.838</td>
+      <td>94.191</td>
+      <td>0.0</td>
+      <td>93.856</td>
+      <td>0.0</td>
+      <td>94.257</td>
+      <td>0.0</td>
+      <td>93.763</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <td>José Berríos</td>
+      <td>621244</td>
+      <td>2025-09-16</td>
+      <td>776305</td>
+      <td>84.655</td>
+      <td>0</td>
+      <td>93.820</td>
+      <td>100.603</td>
+      <td>85.828</td>
+      <td>0.0</td>
+      <td>86.030</td>
+      <td>0.0</td>
+      <td>85.990</td>
+      <td>0.0</td>
+      <td>86.593</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <td>Kevin Gausman</td>
+      <td>592332</td>
+      <td>2025-09-28</td>
+      <td>776145</td>
+      <td>97.952</td>
+      <td>1</td>
+      <td>97.306</td>
+      <td>104.023</td>
+      <td>101.617</td>
+      <td>1.0</td>
+      <td>101.637</td>
+      <td>1.0</td>
+      <td>101.569</td>
+      <td>1.0</td>
+      <td>101.954</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <td>Kyle Freeland</td>
+      <td>607536</td>
+      <td>2025-09-27</td>
+      <td>776146</td>
+      <td>94.953</td>
+      <td>2</td>
+      <td>83.717</td>
+      <td>90.343</td>
+      <td>92.757</td>
+      <td>2.0</td>
+      <td>93.228</td>
+      <td>2.0</td>
+      <td>92.596</td>
+      <td>2.0</td>
+      <td>93.322</td>
+      <td>2.0</td>
+    </tr>
+    <tr>
+      <td>Logan Gilbert</td>
+      <td>669302</td>
+      <td>2025-09-27</td>
+      <td>776150</td>
+      <td>101.771</td>
+      <td>1</td>
+      <td>99.018</td>
+      <td>104.391</td>
+      <td>103.947</td>
+      <td>1.0</td>
+      <td>103.913</td>
+      <td>1.0</td>
+      <td>103.762</td>
+      <td>1.0</td>
+      <td>103.565</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <td>Logan Webb</td>
+      <td>657277</td>
+      <td>2025-09-28</td>
+      <td>776137</td>
+      <td>107.690</td>
+      <td>1</td>
+      <td>104.726</td>
+      <td>111.492</td>
+      <td>107.402</td>
+      <td>1.0</td>
+      <td>107.342</td>
+      <td>1.0</td>
+      <td>107.390</td>
+      <td>1.0</td>
+      <td>107.565</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <td>Luis Castillo</td>
+      <td>622491</td>
+      <td>2025-09-24</td>
+      <td>776194</td>
+      <td>111.122</td>
+      <td>2</td>
+      <td>103.873</td>
+      <td>109.463</td>
+      <td>93.849</td>
+      <td>0.0</td>
+      <td>94.334</td>
+      <td>0.0</td>
+      <td>94.028</td>
+      <td>0.0</td>
+      <td>94.237</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <td>Michael Wacha</td>
+      <td>608379</td>
+      <td>2025-09-27</td>
+      <td>776154</td>
+      <td>90.777</td>
+      <td>0</td>
+      <td>94.936</td>
+      <td>99.937</td>
+      <td>92.041</td>
+      <td>0.0</td>
+      <td>92.307</td>
+      <td>0.0</td>
+      <td>92.262</td>
+      <td>0.0</td>
+      <td>92.529</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <td>Mitch Keller</td>
+      <td>656605</td>
+      <td>2025-09-26</td>
+      <td>776180</td>
+      <td>95.361</td>
+      <td>0</td>
+      <td>96.273</td>
+      <td>103.786</td>
+      <td>92.750</td>
+      <td>0.0</td>
+      <td>92.986</td>
+      <td>0.0</td>
+      <td>92.961</td>
+      <td>0.0</td>
+      <td>92.698</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <td>Patrick Corbin</td>
+      <td>571578</td>
+      <td>2025-09-28</td>
+      <td>776147</td>
+      <td>93.282</td>
+      <td>1</td>
+      <td>87.833</td>
+      <td>93.321</td>
+      <td>91.154</td>
+      <td>1.0</td>
+      <td>91.581</td>
+      <td>1.0</td>
+      <td>91.081</td>
+      <td>1.0</td>
+      <td>91.795</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <td>Sonny Gray</td>
+      <td>543243</td>
+      <td>2025-09-24</td>
+      <td>776196</td>
+      <td>97.090</td>
+      <td>0</td>
+      <td>98.250</td>
+      <td>102.582</td>
+      <td>103.023</td>
+      <td>2.0</td>
+      <td>102.780</td>
+      <td>2.0</td>
+      <td>102.871</td>
+      <td>2.0</td>
+      <td>102.589</td>
+      <td>2.0</td>
+    </tr>
+    <tr>
+      <td>Tyler Anderson</td>
+      <td>542881</td>
+      <td>2025-08-29</td>
+      <td>776543</td>
+      <td>105.469</td>
+      <td>2</td>
+      <td>99.373</td>
+      <td>103.545</td>
+      <td>100.983</td>
+      <td>1.0</td>
+      <td>100.945</td>
+      <td>1.0</td>
+      <td>100.939</td>
+      <td>1.0</td>
+      <td>100.920</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <td>Zac Gallen</td>
+      <td>668678</td>
+      <td>2025-09-26</td>
+      <td>776170</td>
+      <td>96.038</td>
+      <td>0</td>
+      <td>96.515</td>
+      <td>102.547</td>
+      <td>96.916</td>
+      <td>1.0</td>
+      <td>96.939</td>
+      <td>1.0</td>
+      <td>96.913</td>
+      <td>1.0</td>
+      <td>96.681</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <td>Zack Wheeler</td>
+      <td>554430</td>
+      <td>2025-08-15</td>
+      <td>776739</td>
+      <td>103.649</td>
+      <td>0</td>
+      <td>109.799</td>
+      <td>116.702</td>
+      <td>106.913</td>
+      <td>0.0</td>
+      <td>106.791</td>
+      <td>0.0</td>
+      <td>107.062</td>
+      <td>0.0</td>
+      <td>107.116</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table></div>
+    <h2>6. Ridge 해석 방법</h2><p><code>standardized_residual_coefficient</code>는 표준편차 1 증가에 대한 residual 변화다. <code>effective_standardized_coefficient</code>는 최종 0.25 보정까지 반영한다. <code>effective_raw_unit_coefficient</code>는 원래 feature 1단위 증가에 따른 최종 Stuff+ 변화다. 양수는 예측 상승, 음수는 하락 방향이며 상관관계이지 인과효과가 아니다.</p>
+    <h3>선수별 절댓값 상위 3개 표준화 계수</h3><div class="table-wrap"><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>pitcher_name</th>
+      <th>pitcher</th>
+      <th>feature</th>
+      <th>effective_standardized_coefficient</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Brady Singer</td>
+      <td>663903</td>
+      <td>prior_minus_ewma4</td>
+      <td>-0.117204</td>
+    </tr>
+    <tr>
+      <td>Brady Singer</td>
+      <td>663903</td>
+      <td>rest_days</td>
+      <td>-0.110232</td>
+    </tr>
+    <tr>
+      <td>Brady Singer</td>
+      <td>663903</td>
+      <td>pfx_x_slope5</td>
+      <td>0.099600</td>
+    </tr>
+    <tr>
+      <td>Charlie Morton</td>
+      <td>450203</td>
+      <td>prior_minus_ewma4</td>
+      <td>-0.093322</td>
+    </tr>
+    <tr>
+      <td>Charlie Morton</td>
+      <td>450203</td>
+      <td>release_extension_slope5</td>
+      <td>0.082281</td>
+    </tr>
+    <tr>
+      <td>Charlie Morton</td>
+      <td>450203</td>
+      <td>release_spin_rate_slope5</td>
+      <td>-0.077472</td>
+    </tr>
+    <tr>
+      <td>Chris Bassitt</td>
+      <td>605135</td>
+      <td>arm_angle_slope5</td>
+      <td>-0.134200</td>
+    </tr>
+    <tr>
+      <td>Chris Bassitt</td>
+      <td>605135</td>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.118909</td>
+    </tr>
+    <tr>
+      <td>Chris Bassitt</td>
+      <td>605135</td>
+      <td>release_spin_rate_slope5</td>
+      <td>0.107605</td>
+    </tr>
+    <tr>
+      <td>Dylan Cease</td>
+      <td>656302</td>
+      <td>pfx_x_slope5</td>
+      <td>0.166397</td>
+    </tr>
+    <tr>
+      <td>Dylan Cease</td>
+      <td>656302</td>
+      <td>offspeed_share_slope5</td>
+      <td>0.130476</td>
+    </tr>
+    <tr>
+      <td>Dylan Cease</td>
+      <td>656302</td>
+      <td>prior_minus_ewma4</td>
+      <td>-0.111549</td>
+    </tr>
+    <tr>
+      <td>Framber Valdez</td>
+      <td>664285</td>
+      <td>release_spin_rate_slope5</td>
+      <td>0.189127</td>
+    </tr>
+    <tr>
+      <td>Framber Valdez</td>
+      <td>664285</td>
+      <td>pfx_z_slope5</td>
+      <td>0.179780</td>
+    </tr>
+    <tr>
+      <td>Framber Valdez</td>
+      <td>664285</td>
+      <td>pfx_x_slope5</td>
+      <td>-0.148252</td>
+    </tr>
+    <tr>
+      <td>Jameson Taillon</td>
+      <td>592791</td>
+      <td>prior_minus_ewma4</td>
+      <td>-0.098212</td>
+    </tr>
+    <tr>
+      <td>Jameson Taillon</td>
+      <td>592791</td>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.090283</td>
+    </tr>
+    <tr>
+      <td>Jameson Taillon</td>
+      <td>592791</td>
+      <td>workload_density_3starts</td>
+      <td>0.065060</td>
+    </tr>
+    <tr>
+      <td>José Berríos</td>
+      <td>621244</td>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.138508</td>
+    </tr>
+    <tr>
+      <td>José Berríos</td>
+      <td>621244</td>
+      <td>prev_start_pitch_count</td>
+      <td>-0.129944</td>
+    </tr>
+    <tr>
+      <td>José Berríos</td>
+      <td>621244</td>
+      <td>offspeed_share_slope5</td>
+      <td>0.076663</td>
+    </tr>
+    <tr>
+      <td>Kevin Gausman</td>
+      <td>592332</td>
+      <td>rest_days</td>
+      <td>-0.182536</td>
+    </tr>
+    <tr>
+      <td>Kevin Gausman</td>
+      <td>592332</td>
+      <td>release_speed_slope5</td>
+      <td>-0.133557</td>
+    </tr>
+    <tr>
+      <td>Kevin Gausman</td>
+      <td>592332</td>
+      <td>prior_minus_ewma4</td>
+      <td>-0.120182</td>
+    </tr>
+    <tr>
+      <td>Kyle Freeland</td>
+      <td>607536</td>
+      <td>workload_density_3starts</td>
+      <td>-0.149132</td>
+    </tr>
+    <tr>
+      <td>Kyle Freeland</td>
+      <td>607536</td>
+      <td>release_extension_slope5</td>
+      <td>-0.116514</td>
+    </tr>
+    <tr>
+      <td>Kyle Freeland</td>
+      <td>607536</td>
+      <td>mean5_minus_ewma4</td>
+      <td>0.103942</td>
+    </tr>
+    <tr>
+      <td>Logan Gilbert</td>
+      <td>669302</td>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.106116</td>
+    </tr>
+    <tr>
+      <td>Logan Gilbert</td>
+      <td>669302</td>
+      <td>release_spin_rate_slope5</td>
+      <td>0.094229</td>
+    </tr>
+    <tr>
+      <td>Logan Gilbert</td>
+      <td>669302</td>
+      <td>breaking_share_slope5</td>
+      <td>-0.093868</td>
+    </tr>
+    <tr>
+      <td>Logan Webb</td>
+      <td>657277</td>
+      <td>pfx_x_slope5</td>
+      <td>0.113468</td>
+    </tr>
+    <tr>
+      <td>Logan Webb</td>
+      <td>657277</td>
+      <td>release_extension_slope5</td>
+      <td>0.112001</td>
+    </tr>
+    <tr>
+      <td>Logan Webb</td>
+      <td>657277</td>
+      <td>arm_angle_slope5</td>
+      <td>0.084647</td>
+    </tr>
+    <tr>
+      <td>Luis Castillo</td>
+      <td>622491</td>
+      <td>prior_minus_ewma4</td>
+      <td>-0.182776</td>
+    </tr>
+    <tr>
+      <td>Luis Castillo</td>
+      <td>622491</td>
+      <td>rest_days</td>
+      <td>-0.167401</td>
+    </tr>
+    <tr>
+      <td>Luis Castillo</td>
+      <td>622491</td>
+      <td>release_speed_slope5</td>
+      <td>-0.108070</td>
+    </tr>
+    <tr>
+      <td>Michael Wacha</td>
+      <td>608379</td>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.120962</td>
+    </tr>
+    <tr>
+      <td>Michael Wacha</td>
+      <td>608379</td>
+      <td>mean5_minus_ewma4</td>
+      <td>0.111274</td>
+    </tr>
+    <tr>
+      <td>Michael Wacha</td>
+      <td>608379</td>
+      <td>prev_start_pitch_count</td>
+      <td>-0.069961</td>
+    </tr>
+    <tr>
+      <td>Mitch Keller</td>
+      <td>656605</td>
+      <td>rest_days</td>
+      <td>0.149008</td>
+    </tr>
+    <tr>
+      <td>Mitch Keller</td>
+      <td>656605</td>
+      <td>release_spin_rate_slope5</td>
+      <td>-0.119037</td>
+    </tr>
+    <tr>
+      <td>Mitch Keller</td>
+      <td>656605</td>
+      <td>breaking_share_slope5</td>
+      <td>-0.106244</td>
+    </tr>
+    <tr>
+      <td>Patrick Corbin</td>
+      <td>571578</td>
+      <td>prior_minus_ewma4</td>
+      <td>-0.136570</td>
+    </tr>
+    <tr>
+      <td>Patrick Corbin</td>
+      <td>571578</td>
+      <td>rest_days</td>
+      <td>0.106562</td>
+    </tr>
+    <tr>
+      <td>Patrick Corbin</td>
+      <td>571578</td>
+      <td>release_pos_z_slope5</td>
+      <td>0.104997</td>
+    </tr>
+    <tr>
+      <td>Sonny Gray</td>
+      <td>543243</td>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.127642</td>
+    </tr>
+    <tr>
+      <td>Sonny Gray</td>
+      <td>543243</td>
+      <td>prev_start_pitch_count</td>
+      <td>-0.124492</td>
+    </tr>
+    <tr>
+      <td>Sonny Gray</td>
+      <td>543243</td>
+      <td>workload_density_3starts</td>
+      <td>-0.070799</td>
+    </tr>
+    <tr>
+      <td>Tyler Anderson</td>
+      <td>542881</td>
+      <td>mean5_minus_ewma4</td>
+      <td>0.086090</td>
+    </tr>
+    <tr>
+      <td>Tyler Anderson</td>
+      <td>542881</td>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.081213</td>
+    </tr>
+    <tr>
+      <td>Tyler Anderson</td>
+      <td>542881</td>
+      <td>prior_minus_ewma4</td>
+      <td>0.071346</td>
+    </tr>
+    <tr>
+      <td>Zac Gallen</td>
+      <td>668678</td>
+      <td>rest_days</td>
+      <td>-0.152160</td>
+    </tr>
+    <tr>
+      <td>Zac Gallen</td>
+      <td>668678</td>
+      <td>breaking_share_slope5</td>
+      <td>0.081403</td>
+    </tr>
+    <tr>
+      <td>Zac Gallen</td>
+      <td>668678</td>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.081068</td>
+    </tr>
+    <tr>
+      <td>Zack Wheeler</td>
+      <td>554430</td>
+      <td>release_spin_rate_slope5</td>
+      <td>0.137583</td>
+    </tr>
+    <tr>
+      <td>Zack Wheeler</td>
+      <td>554430</td>
+      <td>prior_minus_ewma4</td>
+      <td>-0.127423</td>
+    </tr>
+    <tr>
+      <td>Zack Wheeler</td>
+      <td>554430</td>
+      <td>release_pos_z_slope5</td>
+      <td>0.112772</td>
+    </tr>
+  </tbody>
+</table></div>
+    <h3>선수별 전체 16개 계수</h3><details><summary>Brady Singer (663903) — 16개 계수</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>standardized_residual_coefficient</th>
+      <th>effective_standardized_coefficient</th>
+      <th>effective_raw_unit_coefficient</th>
+      <th>feature_training_mean</th>
+      <th>feature_training_scale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>prior_minus_ewma4</td>
+      <td>-0.468816</td>
+      <td>-0.117204</td>
+      <td>-0.039786</td>
+      <td>-0.126600</td>
+      <td>2.945877</td>
+    </tr>
+    <tr>
+      <td>mean5_minus_ewma4</td>
+      <td>0.160274</td>
+      <td>0.040068</td>
+      <td>0.032251</td>
+      <td>0.054625</td>
+      <td>1.242381</td>
+    </tr>
+    <tr>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.181571</td>
+      <td>-0.045393</td>
+      <td>-0.030858</td>
+      <td>-0.072109</td>
+      <td>1.471014</td>
+    </tr>
+    <tr>
+      <td>prev_start_pitch_count</td>
+      <td>0.287273</td>
+      <td>0.071818</td>
+      <td>0.006136</td>
+      <td>92.326923</td>
+      <td>11.704242</td>
+    </tr>
+    <tr>
+      <td>rest_days</td>
+      <td>-0.440928</td>
+      <td>-0.110232</td>
+      <td>-0.088490</td>
+      <td>5.923077</td>
+      <td>1.245703</td>
+    </tr>
+    <tr>
+      <td>workload_density_3starts</td>
+      <td>-0.026423</td>
+      <td>-0.006606</td>
+      <td>-0.003266</td>
+      <td>15.878834</td>
+      <td>2.022791</td>
+    </tr>
+    <tr>
+      <td>release_speed_slope5</td>
+      <td>0.344956</td>
+      <td>0.086239</td>
+      <td>0.364787</td>
+      <td>-0.028140</td>
+      <td>0.236409</td>
+    </tr>
+    <tr>
+      <td>release_spin_rate_slope5</td>
+      <td>-0.010234</td>
+      <td>-0.002559</td>
+      <td>-0.000194</td>
+      <td>0.496228</td>
+      <td>13.175744</td>
+    </tr>
+    <tr>
+      <td>release_extension_slope5</td>
+      <td>-0.068154</td>
+      <td>-0.017038</td>
+      <td>-0.464787</td>
+      <td>0.003487</td>
+      <td>0.036659</td>
+    </tr>
+    <tr>
+      <td>release_pos_x_slope5</td>
+      <td>-0.234293</td>
+      <td>-0.058573</td>
+      <td>-1.869031</td>
+      <td>0.000447</td>
+      <td>0.031339</td>
+    </tr>
+    <tr>
+      <td>release_pos_z_slope5</td>
+      <td>-0.025636</td>
+      <td>-0.006409</td>
+      <td>-0.271875</td>
+      <td>-0.002668</td>
+      <td>0.023573</td>
+    </tr>
+    <tr>
+      <td>arm_angle_slope5</td>
+      <td>-0.297760</td>
+      <td>-0.074440</td>
+      <td>-0.156444</td>
+      <td>-0.061087</td>
+      <td>0.475825</td>
+    </tr>
+    <tr>
+      <td>pfx_x_slope5</td>
+      <td>0.398399</td>
+      <td>0.099600</td>
+      <td>2.559504</td>
+      <td>0.001002</td>
+      <td>0.038914</td>
+    </tr>
+    <tr>
+      <td>pfx_z_slope5</td>
+      <td>-0.300548</td>
+      <td>-0.075137</td>
+      <td>-2.379561</td>
+      <td>-0.000187</td>
+      <td>0.031576</td>
+    </tr>
+    <tr>
+      <td>breaking_share_slope5</td>
+      <td>0.232296</td>
+      <td>0.058074</td>
+      <td>2.719872</td>
+      <td>0.000538</td>
+      <td>0.021352</td>
+    </tr>
+    <tr>
+      <td>offspeed_share_slope5</td>
+      <td>-0.108158</td>
+      <td>-0.027039</td>
+      <td>-2.281722</td>
+      <td>-0.000440</td>
+      <td>0.011850</td>
+    </tr>
+  </tbody>
+</table></details><details><summary>Charlie Morton (450203) — 16개 계수</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>standardized_residual_coefficient</th>
+      <th>effective_standardized_coefficient</th>
+      <th>effective_raw_unit_coefficient</th>
+      <th>feature_training_mean</th>
+      <th>feature_training_scale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>prior_minus_ewma4</td>
+      <td>-0.373287</td>
+      <td>-0.093322</td>
+      <td>-0.032809</td>
+      <td>0.018035</td>
+      <td>2.844403</td>
+    </tr>
+    <tr>
+      <td>mean5_minus_ewma4</td>
+      <td>0.025417</td>
+      <td>0.006354</td>
+      <td>0.005000</td>
+      <td>0.044806</td>
+      <td>1.270908</td>
+    </tr>
+    <tr>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.145768</td>
+      <td>-0.036442</td>
+      <td>-0.024362</td>
+      <td>-0.075787</td>
+      <td>1.495839</td>
+    </tr>
+    <tr>
+      <td>prev_start_pitch_count</td>
+      <td>0.104852</td>
+      <td>0.026213</td>
+      <td>0.002541</td>
+      <td>94.437500</td>
+      <td>10.314502</td>
+    </tr>
+    <tr>
+      <td>rest_days</td>
+      <td>-0.178232</td>
+      <td>-0.044558</td>
+      <td>-0.047935</td>
+      <td>5.955357</td>
+      <td>0.929558</td>
+    </tr>
+    <tr>
+      <td>workload_density_3starts</td>
+      <td>-0.293708</td>
+      <td>-0.073427</td>
+      <td>-0.043398</td>
+      <td>15.885374</td>
+      <td>1.691934</td>
+    </tr>
+    <tr>
+      <td>release_speed_slope5</td>
+      <td>-0.282907</td>
+      <td>-0.070727</td>
+      <td>-0.262438</td>
+      <td>0.014607</td>
+      <td>0.269499</td>
+    </tr>
+    <tr>
+      <td>release_spin_rate_slope5</td>
+      <td>-0.309888</td>
+      <td>-0.077472</td>
+      <td>-0.003510</td>
+      <td>1.643926</td>
+      <td>22.069115</td>
+    </tr>
+    <tr>
+      <td>release_extension_slope5</td>
+      <td>0.329126</td>
+      <td>0.082281</td>
+      <td>2.769256</td>
+      <td>-0.004071</td>
+      <td>0.029712</td>
+    </tr>
+    <tr>
+      <td>release_pos_x_slope5</td>
+      <td>-0.272455</td>
+      <td>-0.068114</td>
+      <td>-1.841996</td>
+      <td>-0.009485</td>
+      <td>0.036978</td>
+    </tr>
+    <tr>
+      <td>release_pos_z_slope5</td>
+      <td>-0.070476</td>
+      <td>-0.017619</td>
+      <td>-0.670816</td>
+      <td>-0.002791</td>
+      <td>0.026265</td>
+    </tr>
+    <tr>
+      <td>arm_angle_slope5</td>
+      <td>0.162429</td>
+      <td>0.040607</td>
+      <td>0.114986</td>
+      <td>-0.086339</td>
+      <td>0.353152</td>
+    </tr>
+    <tr>
+      <td>pfx_x_slope5</td>
+      <td>-0.024465</td>
+      <td>-0.006116</td>
+      <td>-0.110087</td>
+      <td>-0.001845</td>
+      <td>0.055558</td>
+    </tr>
+    <tr>
+      <td>pfx_z_slope5</td>
+      <td>0.151285</td>
+      <td>0.037821</td>
+      <td>1.124516</td>
+      <td>-0.002989</td>
+      <td>0.033633</td>
+    </tr>
+    <tr>
+      <td>breaking_share_slope5</td>
+      <td>-0.024973</td>
+      <td>-0.006243</td>
+      <td>-0.329366</td>
+      <td>-0.000159</td>
+      <td>0.018956</td>
+    </tr>
+    <tr>
+      <td>offspeed_share_slope5</td>
+      <td>0.167587</td>
+      <td>0.041897</td>
+      <td>3.831813</td>
+      <td>0.001056</td>
+      <td>0.010934</td>
+    </tr>
+  </tbody>
+</table></details><details><summary>Chris Bassitt (605135) — 16개 계수</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>standardized_residual_coefficient</th>
+      <th>effective_standardized_coefficient</th>
+      <th>effective_raw_unit_coefficient</th>
+      <th>feature_training_mean</th>
+      <th>feature_training_scale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>prior_minus_ewma4</td>
+      <td>-0.165458</td>
+      <td>-0.041364</td>
+      <td>-0.012899</td>
+      <td>0.136024</td>
+      <td>3.206858</td>
+    </tr>
+    <tr>
+      <td>mean5_minus_ewma4</td>
+      <td>0.102189</td>
+      <td>0.025547</td>
+      <td>0.016892</td>
+      <td>-0.062191</td>
+      <td>1.512390</td>
+    </tr>
+    <tr>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.475635</td>
+      <td>-0.118909</td>
+      <td>-0.069049</td>
+      <td>0.056432</td>
+      <td>1.722080</td>
+    </tr>
+    <tr>
+      <td>prev_start_pitch_count</td>
+      <td>-0.155913</td>
+      <td>-0.038978</td>
+      <td>-0.004013</td>
+      <td>95.780702</td>
+      <td>9.712317</td>
+    </tr>
+    <tr>
+      <td>rest_days</td>
+      <td>0.247706</td>
+      <td>0.061927</td>
+      <td>0.052351</td>
+      <td>5.885965</td>
+      <td>1.182910</td>
+    </tr>
+    <tr>
+      <td>workload_density_3starts</td>
+      <td>0.014862</td>
+      <td>0.003716</td>
+      <td>0.002050</td>
+      <td>16.551735</td>
+      <td>1.812713</td>
+    </tr>
+    <tr>
+      <td>release_speed_slope5</td>
+      <td>-0.029696</td>
+      <td>-0.007424</td>
+      <td>-0.022097</td>
+      <td>-0.020591</td>
+      <td>0.335967</td>
+    </tr>
+    <tr>
+      <td>release_spin_rate_slope5</td>
+      <td>0.430420</td>
+      <td>0.107605</td>
+      <td>0.007895</td>
+      <td>-0.373376</td>
+      <td>13.629909</td>
+    </tr>
+    <tr>
+      <td>release_extension_slope5</td>
+      <td>0.333484</td>
+      <td>0.083371</td>
+      <td>2.439881</td>
+      <td>-0.001413</td>
+      <td>0.034170</td>
+    </tr>
+    <tr>
+      <td>release_pos_x_slope5</td>
+      <td>-0.222276</td>
+      <td>-0.055569</td>
+      <td>-0.729067</td>
+      <td>-0.013682</td>
+      <td>0.076220</td>
+    </tr>
+    <tr>
+      <td>release_pos_z_slope5</td>
+      <td>-0.296121</td>
+      <td>-0.074030</td>
+      <td>-2.861975</td>
+      <td>-0.004266</td>
+      <td>0.025867</td>
+    </tr>
+    <tr>
+      <td>arm_angle_slope5</td>
+      <td>-0.536799</td>
+      <td>-0.134200</td>
+      <td>-0.289197</td>
+      <td>-0.147990</td>
+      <td>0.464042</td>
+    </tr>
+    <tr>
+      <td>pfx_x_slope5</td>
+      <td>-0.279371</td>
+      <td>-0.069843</td>
+      <td>-1.500954</td>
+      <td>0.003840</td>
+      <td>0.046532</td>
+    </tr>
+    <tr>
+      <td>pfx_z_slope5</td>
+      <td>-0.290158</td>
+      <td>-0.072539</td>
+      <td>-2.825791</td>
+      <td>-0.006113</td>
+      <td>0.025670</td>
+    </tr>
+    <tr>
+      <td>breaking_share_slope5</td>
+      <td>0.395873</td>
+      <td>0.098968</td>
+      <td>5.298682</td>
+      <td>0.001833</td>
+      <td>0.018678</td>
+    </tr>
+    <tr>
+      <td>offspeed_share_slope5</td>
+      <td>-0.261746</td>
+      <td>-0.065437</td>
+      <td>-5.250039</td>
+      <td>-0.000004</td>
+      <td>0.012464</td>
+    </tr>
+  </tbody>
+</table></details><details><summary>Dylan Cease (656302) — 16개 계수</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>standardized_residual_coefficient</th>
+      <th>effective_standardized_coefficient</th>
+      <th>effective_raw_unit_coefficient</th>
+      <th>feature_training_mean</th>
+      <th>feature_training_scale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>prior_minus_ewma4</td>
+      <td>-0.446196</td>
+      <td>-0.111549</td>
+      <td>-0.028945</td>
+      <td>0.059621</td>
+      <td>3.853826</td>
+    </tr>
+    <tr>
+      <td>mean5_minus_ewma4</td>
+      <td>0.351231</td>
+      <td>0.087808</td>
+      <td>0.055021</td>
+      <td>0.027768</td>
+      <td>1.595901</td>
+    </tr>
+    <tr>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.412599</td>
+      <td>-0.103150</td>
+      <td>-0.054929</td>
+      <td>0.035048</td>
+      <td>1.877887</td>
+    </tr>
+    <tr>
+      <td>prev_start_pitch_count</td>
+      <td>0.364196</td>
+      <td>0.091049</td>
+      <td>0.008045</td>
+      <td>96.793651</td>
+      <td>11.317438</td>
+    </tr>
+    <tr>
+      <td>rest_days</td>
+      <td>0.257341</td>
+      <td>0.064335</td>
+      <td>0.080913</td>
+      <td>5.674603</td>
+      <td>0.795118</td>
+    </tr>
+    <tr>
+      <td>workload_density_3starts</td>
+      <td>-0.010301</td>
+      <td>-0.002575</td>
+      <td>-0.001490</td>
+      <td>17.174284</td>
+      <td>1.727945</td>
+    </tr>
+    <tr>
+      <td>release_speed_slope5</td>
+      <td>-0.332742</td>
+      <td>-0.083185</td>
+      <td>-0.237251</td>
+      <td>0.010572</td>
+      <td>0.350622</td>
+    </tr>
+    <tr>
+      <td>release_spin_rate_slope5</td>
+      <td>0.220301</td>
+      <td>0.055075</td>
+      <td>0.001980</td>
+      <td>0.051228</td>
+      <td>27.818893</td>
+    </tr>
+    <tr>
+      <td>release_extension_slope5</td>
+      <td>0.101993</td>
+      <td>0.025498</td>
+      <td>0.806887</td>
+      <td>0.002954</td>
+      <td>0.031601</td>
+    </tr>
+    <tr>
+      <td>release_pos_x_slope5</td>
+      <td>0.307968</td>
+      <td>0.076992</td>
+      <td>1.717154</td>
+      <td>0.002157</td>
+      <td>0.044837</td>
+    </tr>
+    <tr>
+      <td>release_pos_z_slope5</td>
+      <td>-0.048451</td>
+      <td>-0.012113</td>
+      <td>-0.556409</td>
+      <td>-0.001043</td>
+      <td>0.021769</td>
+    </tr>
+    <tr>
+      <td>arm_angle_slope5</td>
+      <td>0.085296</td>
+      <td>0.021324</td>
+      <td>0.041059</td>
+      <td>0.016511</td>
+      <td>0.519349</td>
+    </tr>
+    <tr>
+      <td>pfx_x_slope5</td>
+      <td>0.665588</td>
+      <td>0.166397</td>
+      <td>5.628045</td>
+      <td>-0.001519</td>
+      <td>0.029566</td>
+    </tr>
+    <tr>
+      <td>pfx_z_slope5</td>
+      <td>-0.023411</td>
+      <td>-0.005853</td>
+      <td>-0.101804</td>
+      <td>0.000810</td>
+      <td>0.057491</td>
+    </tr>
+    <tr>
+      <td>breaking_share_slope5</td>
+      <td>-0.030827</td>
+      <td>-0.007707</td>
+      <td>-0.366081</td>
+      <td>0.001370</td>
+      <td>0.021052</td>
+    </tr>
+    <tr>
+      <td>offspeed_share_slope5</td>
+      <td>0.521904</td>
+      <td>0.130476</td>
+      <td>9.293443</td>
+      <td>-0.000820</td>
+      <td>0.014040</td>
+    </tr>
+  </tbody>
+</table></details><details><summary>Framber Valdez (664285) — 16개 계수</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>standardized_residual_coefficient</th>
+      <th>effective_standardized_coefficient</th>
+      <th>effective_raw_unit_coefficient</th>
+      <th>feature_training_mean</th>
+      <th>feature_training_scale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>prior_minus_ewma4</td>
+      <td>-0.469081</td>
+      <td>-0.117270</td>
+      <td>-0.026275</td>
+      <td>0.059781</td>
+      <td>4.463188</td>
+    </tr>
+    <tr>
+      <td>mean5_minus_ewma4</td>
+      <td>0.449064</td>
+      <td>0.112266</td>
+      <td>0.060393</td>
+      <td>0.002376</td>
+      <td>1.858935</td>
+    </tr>
+    <tr>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.501539</td>
+      <td>-0.125385</td>
+      <td>-0.059049</td>
+      <td>0.052552</td>
+      <td>2.123404</td>
+    </tr>
+    <tr>
+      <td>prev_start_pitch_count</td>
+      <td>0.347938</td>
+      <td>0.086984</td>
+      <td>0.010580</td>
+      <td>96.904762</td>
+      <td>8.221370</td>
+    </tr>
+    <tr>
+      <td>rest_days</td>
+      <td>0.552193</td>
+      <td>0.138048</td>
+      <td>0.131340</td>
+      <td>6.000000</td>
+      <td>1.051077</td>
+    </tr>
+    <tr>
+      <td>workload_density_3starts</td>
+      <td>-0.043207</td>
+      <td>-0.010802</td>
+      <td>-0.006751</td>
+      <td>16.135002</td>
+      <td>1.600067</td>
+    </tr>
+    <tr>
+      <td>release_speed_slope5</td>
+      <td>0.126878</td>
+      <td>0.031720</td>
+      <td>0.091204</td>
+      <td>-0.019123</td>
+      <td>0.347788</td>
+    </tr>
+    <tr>
+      <td>release_spin_rate_slope5</td>
+      <td>0.756509</td>
+      <td>0.189127</td>
+      <td>0.007158</td>
+      <td>0.777728</td>
+      <td>26.420831</td>
+    </tr>
+    <tr>
+      <td>release_extension_slope5</td>
+      <td>-0.215620</td>
+      <td>-0.053905</td>
+      <td>-1.855579</td>
+      <td>-0.003717</td>
+      <td>0.029050</td>
+    </tr>
+    <tr>
+      <td>release_pos_x_slope5</td>
+      <td>-0.046672</td>
+      <td>-0.011668</td>
+      <td>-0.308313</td>
+      <td>-0.005469</td>
+      <td>0.037845</td>
+    </tr>
+    <tr>
+      <td>release_pos_z_slope5</td>
+      <td>0.395642</td>
+      <td>0.098911</td>
+      <td>4.130284</td>
+      <td>0.002584</td>
+      <td>0.023948</td>
+    </tr>
+    <tr>
+      <td>arm_angle_slope5</td>
+      <td>0.189452</td>
+      <td>0.047363</td>
+      <td>0.096689</td>
+      <td>0.019951</td>
+      <td>0.489851</td>
+    </tr>
+    <tr>
+      <td>pfx_x_slope5</td>
+      <td>-0.593006</td>
+      <td>-0.148252</td>
+      <td>-2.552109</td>
+      <td>-0.001605</td>
+      <td>0.058090</td>
+    </tr>
+    <tr>
+      <td>pfx_z_slope5</td>
+      <td>0.719119</td>
+      <td>0.179780</td>
+      <td>4.052061</td>
+      <td>0.000542</td>
+      <td>0.044368</td>
+    </tr>
+    <tr>
+      <td>breaking_share_slope5</td>
+      <td>0.123557</td>
+      <td>0.030889</td>
+      <td>1.210281</td>
+      <td>0.000769</td>
+      <td>0.025522</td>
+    </tr>
+    <tr>
+      <td>offspeed_share_slope5</td>
+      <td>-0.122223</td>
+      <td>-0.030556</td>
+      <td>-1.603682</td>
+      <td>0.001429</td>
+      <td>0.019054</td>
+    </tr>
+  </tbody>
+</table></details><details><summary>Jameson Taillon (592791) — 16개 계수</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>standardized_residual_coefficient</th>
+      <th>effective_standardized_coefficient</th>
+      <th>effective_raw_unit_coefficient</th>
+      <th>feature_training_mean</th>
+      <th>feature_training_scale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>prior_minus_ewma4</td>
+      <td>-0.392849</td>
+      <td>-0.098212</td>
+      <td>-0.034969</td>
+      <td>-0.254625</td>
+      <td>2.808553</td>
+    </tr>
+    <tr>
+      <td>mean5_minus_ewma4</td>
+      <td>0.245935</td>
+      <td>0.061484</td>
+      <td>0.052170</td>
+      <td>0.099904</td>
+      <td>1.178520</td>
+    </tr>
+    <tr>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.361131</td>
+      <td>-0.090283</td>
+      <td>-0.068285</td>
+      <td>-0.176281</td>
+      <td>1.322146</td>
+    </tr>
+    <tr>
+      <td>prev_start_pitch_count</td>
+      <td>-0.217099</td>
+      <td>-0.054275</td>
+      <td>-0.004249</td>
+      <td>87.435644</td>
+      <td>12.773283</td>
+    </tr>
+    <tr>
+      <td>rest_days</td>
+      <td>-0.033843</td>
+      <td>-0.008461</td>
+      <td>-0.007454</td>
+      <td>5.831683</td>
+      <td>1.135122</td>
+    </tr>
+    <tr>
+      <td>workload_density_3starts</td>
+      <td>0.260240</td>
+      <td>0.065060</td>
+      <td>0.027991</td>
+      <td>14.979654</td>
+      <td>2.324342</td>
+    </tr>
+    <tr>
+      <td>release_speed_slope5</td>
+      <td>-0.248058</td>
+      <td>-0.062015</td>
+      <td>-0.203529</td>
+      <td>-0.002897</td>
+      <td>0.304697</td>
+    </tr>
+    <tr>
+      <td>release_spin_rate_slope5</td>
+      <td>-0.225702</td>
+      <td>-0.056426</td>
+      <td>-0.003530</td>
+      <td>-1.003987</td>
+      <td>15.984962</td>
+    </tr>
+    <tr>
+      <td>release_extension_slope5</td>
+      <td>-0.224871</td>
+      <td>-0.056218</td>
+      <td>-1.857760</td>
+      <td>0.002761</td>
+      <td>0.030261</td>
+    </tr>
+    <tr>
+      <td>release_pos_x_slope5</td>
+      <td>0.160498</td>
+      <td>0.040124</td>
+      <td>1.243403</td>
+      <td>0.008795</td>
+      <td>0.032270</td>
+    </tr>
+    <tr>
+      <td>release_pos_z_slope5</td>
+      <td>-0.070562</td>
+      <td>-0.017641</td>
+      <td>-0.799859</td>
+      <td>-0.002022</td>
+      <td>0.022055</td>
+    </tr>
+    <tr>
+      <td>arm_angle_slope5</td>
+      <td>-0.070006</td>
+      <td>-0.017501</td>
+      <td>-0.057612</td>
+      <td>-0.027464</td>
+      <td>0.303782</td>
+    </tr>
+    <tr>
+      <td>pfx_x_slope5</td>
+      <td>0.047855</td>
+      <td>0.011964</td>
+      <td>0.274895</td>
+      <td>-0.004540</td>
+      <td>0.043521</td>
+    </tr>
+    <tr>
+      <td>pfx_z_slope5</td>
+      <td>0.036150</td>
+      <td>0.009038</td>
+      <td>0.200162</td>
+      <td>-0.001825</td>
+      <td>0.045151</td>
+    </tr>
+    <tr>
+      <td>breaking_share_slope5</td>
+      <td>0.070216</td>
+      <td>0.017554</td>
+      <td>0.712094</td>
+      <td>-0.002615</td>
+      <td>0.024651</td>
+    </tr>
+    <tr>
+      <td>offspeed_share_slope5</td>
+      <td>0.092493</td>
+      <td>0.023123</td>
+      <td>1.775678</td>
+      <td>0.000436</td>
+      <td>0.013022</td>
+    </tr>
+  </tbody>
+</table></details><details><summary>José Berríos (621244) — 16개 계수</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>standardized_residual_coefficient</th>
+      <th>effective_standardized_coefficient</th>
+      <th>effective_raw_unit_coefficient</th>
+      <th>feature_training_mean</th>
+      <th>feature_training_scale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>prior_minus_ewma4</td>
+      <td>0.176062</td>
+      <td>0.044016</td>
+      <td>0.011855</td>
+      <td>-0.028533</td>
+      <td>3.712813</td>
+    </tr>
+    <tr>
+      <td>mean5_minus_ewma4</td>
+      <td>0.118198</td>
+      <td>0.029550</td>
+      <td>0.015525</td>
+      <td>0.022653</td>
+      <td>1.903329</td>
+    </tr>
+    <tr>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.554034</td>
+      <td>-0.138508</td>
+      <td>-0.064042</td>
+      <td>-0.159376</td>
+      <td>2.162759</td>
+    </tr>
+    <tr>
+      <td>prev_start_pitch_count</td>
+      <td>-0.519777</td>
+      <td>-0.129944</td>
+      <td>-0.012494</td>
+      <td>91.936000</td>
+      <td>10.400572</td>
+    </tr>
+    <tr>
+      <td>rest_days</td>
+      <td>0.184154</td>
+      <td>0.046038</td>
+      <td>0.051839</td>
+      <td>5.792000</td>
+      <td>0.888108</td>
+    </tr>
+    <tr>
+      <td>workload_density_3starts</td>
+      <td>-0.161623</td>
+      <td>-0.040406</td>
+      <td>-0.024742</td>
+      <td>15.894030</td>
+      <td>1.633070</td>
+    </tr>
+    <tr>
+      <td>release_speed_slope5</td>
+      <td>-0.300982</td>
+      <td>-0.075245</td>
+      <td>-0.260511</td>
+      <td>0.001461</td>
+      <td>0.288839</td>
+    </tr>
+    <tr>
+      <td>release_spin_rate_slope5</td>
+      <td>0.303935</td>
+      <td>0.075984</td>
+      <td>0.004029</td>
+      <td>-0.571588</td>
+      <td>18.858555</td>
+    </tr>
+    <tr>
+      <td>release_extension_slope5</td>
+      <td>0.161592</td>
+      <td>0.040398</td>
+      <td>1.301707</td>
+      <td>-0.003527</td>
+      <td>0.031035</td>
+    </tr>
+    <tr>
+      <td>release_pos_x_slope5</td>
+      <td>-0.302697</td>
+      <td>-0.075674</td>
+      <td>-0.954176</td>
+      <td>0.004112</td>
+      <td>0.079308</td>
+    </tr>
+    <tr>
+      <td>release_pos_z_slope5</td>
+      <td>-0.240701</td>
+      <td>-0.060175</td>
+      <td>-2.480481</td>
+      <td>0.000999</td>
+      <td>0.024260</td>
+    </tr>
+    <tr>
+      <td>arm_angle_slope5</td>
+      <td>0.187444</td>
+      <td>0.046861</td>
+      <td>0.126395</td>
+      <td>-0.036400</td>
+      <td>0.370752</td>
+    </tr>
+    <tr>
+      <td>pfx_x_slope5</td>
+      <td>0.075485</td>
+      <td>0.018871</td>
+      <td>0.337933</td>
+      <td>-0.003343</td>
+      <td>0.055843</td>
+    </tr>
+    <tr>
+      <td>pfx_z_slope5</td>
+      <td>0.144071</td>
+      <td>0.036018</td>
+      <td>1.087741</td>
+      <td>-0.002078</td>
+      <td>0.033112</td>
+    </tr>
+    <tr>
+      <td>breaking_share_slope5</td>
+      <td>-0.097287</td>
+      <td>-0.024322</td>
+      <td>-1.137831</td>
+      <td>-0.001143</td>
+      <td>0.021375</td>
+    </tr>
+    <tr>
+      <td>offspeed_share_slope5</td>
+      <td>0.306650</td>
+      <td>0.076663</td>
+      <td>4.653354</td>
+      <td>0.000771</td>
+      <td>0.016475</td>
+    </tr>
+  </tbody>
+</table></details><details><summary>Kevin Gausman (592332) — 16개 계수</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>standardized_residual_coefficient</th>
+      <th>effective_standardized_coefficient</th>
+      <th>effective_raw_unit_coefficient</th>
+      <th>feature_training_mean</th>
+      <th>feature_training_scale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>prior_minus_ewma4</td>
+      <td>-0.480729</td>
+      <td>-0.120182</td>
+      <td>-0.031047</td>
+      <td>-0.368119</td>
+      <td>3.870948</td>
+    </tr>
+    <tr>
+      <td>mean5_minus_ewma4</td>
+      <td>0.139341</td>
+      <td>0.034835</td>
+      <td>0.021275</td>
+      <td>0.133654</td>
+      <td>1.637382</td>
+    </tr>
+    <tr>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.393857</td>
+      <td>-0.098464</td>
+      <td>-0.052952</td>
+      <td>-0.150609</td>
+      <td>1.859517</td>
+    </tr>
+    <tr>
+      <td>prev_start_pitch_count</td>
+      <td>-0.288487</td>
+      <td>-0.072122</td>
+      <td>-0.006102</td>
+      <td>94.816667</td>
+      <td>11.818759</td>
+    </tr>
+    <tr>
+      <td>rest_days</td>
+      <td>-0.730144</td>
+      <td>-0.182536</td>
+      <td>-0.133256</td>
+      <td>5.916667</td>
+      <td>1.369813</td>
+    </tr>
+    <tr>
+      <td>workload_density_3starts</td>
+      <td>0.252444</td>
+      <td>0.063111</td>
+      <td>0.029028</td>
+      <td>16.262753</td>
+      <td>2.174122</td>
+    </tr>
+    <tr>
+      <td>release_speed_slope5</td>
+      <td>-0.534227</td>
+      <td>-0.133557</td>
+      <td>-0.301872</td>
+      <td>0.056341</td>
+      <td>0.442429</td>
+    </tr>
+    <tr>
+      <td>release_spin_rate_slope5</td>
+      <td>0.002232</td>
+      <td>0.000558</td>
+      <td>0.000022</td>
+      <td>0.721355</td>
+      <td>25.186564</td>
+    </tr>
+    <tr>
+      <td>release_extension_slope5</td>
+      <td>0.218913</td>
+      <td>0.054728</td>
+      <td>1.727681</td>
+      <td>0.003526</td>
+      <td>0.031677</td>
+    </tr>
+    <tr>
+      <td>release_pos_x_slope5</td>
+      <td>0.106213</td>
+      <td>0.026553</td>
+      <td>1.115778</td>
+      <td>0.002176</td>
+      <td>0.023798</td>
+    </tr>
+    <tr>
+      <td>release_pos_z_slope5</td>
+      <td>0.185456</td>
+      <td>0.046364</td>
+      <td>1.580468</td>
+      <td>-0.003779</td>
+      <td>0.029336</td>
+    </tr>
+    <tr>
+      <td>arm_angle_slope5</td>
+      <td>0.207087</td>
+      <td>0.051772</td>
+      <td>0.108608</td>
+      <td>-0.090031</td>
+      <td>0.476684</td>
+    </tr>
+    <tr>
+      <td>pfx_x_slope5</td>
+      <td>-0.068982</td>
+      <td>-0.017246</td>
+      <td>-0.503395</td>
+      <td>-0.000008</td>
+      <td>0.034259</td>
+    </tr>
+    <tr>
+      <td>pfx_z_slope5</td>
+      <td>0.459799</td>
+      <td>0.114950</td>
+      <td>3.411619</td>
+      <td>0.001420</td>
+      <td>0.033694</td>
+    </tr>
+    <tr>
+      <td>breaking_share_slope5</td>
+      <td>0.026990</td>
+      <td>0.006747</td>
+      <td>0.369674</td>
+      <td>-0.000297</td>
+      <td>0.018252</td>
+    </tr>
+    <tr>
+      <td>offspeed_share_slope5</td>
+      <td>0.075706</td>
+      <td>0.018926</td>
+      <td>0.838572</td>
+      <td>-0.000630</td>
+      <td>0.022570</td>
+    </tr>
+  </tbody>
+</table></details><details><summary>Kyle Freeland (607536) — 16개 계수</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>standardized_residual_coefficient</th>
+      <th>effective_standardized_coefficient</th>
+      <th>effective_raw_unit_coefficient</th>
+      <th>feature_training_mean</th>
+      <th>feature_training_scale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>prior_minus_ewma4</td>
+      <td>-0.174395</td>
+      <td>-0.043599</td>
+      <td>-0.013998</td>
+      <td>-0.104355</td>
+      <td>3.114564</td>
+    </tr>
+    <tr>
+      <td>mean5_minus_ewma4</td>
+      <td>0.415769</td>
+      <td>0.103942</td>
+      <td>0.083941</td>
+      <td>-0.005714</td>
+      <td>1.238283</td>
+    </tr>
+    <tr>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.409968</td>
+      <td>-0.102492</td>
+      <td>-0.069917</td>
+      <td>-0.021500</td>
+      <td>1.465912</td>
+    </tr>
+    <tr>
+      <td>prev_start_pitch_count</td>
+      <td>-0.006249</td>
+      <td>-0.001562</td>
+      <td>-0.000118</td>
+      <td>87.378947</td>
+      <td>13.210983</td>
+    </tr>
+    <tr>
+      <td>rest_days</td>
+      <td>0.045552</td>
+      <td>0.011388</td>
+      <td>0.006835</td>
+      <td>5.884211</td>
+      <td>1.666153</td>
+    </tr>
+    <tr>
+      <td>workload_density_3starts</td>
+      <td>-0.596527</td>
+      <td>-0.149132</td>
+      <td>-0.077871</td>
+      <td>14.985503</td>
+      <td>1.915116</td>
+    </tr>
+    <tr>
+      <td>release_speed_slope5</td>
+      <td>0.223579</td>
+      <td>0.055895</td>
+      <td>0.199947</td>
+      <td>-0.005132</td>
+      <td>0.279547</td>
+    </tr>
+    <tr>
+      <td>release_spin_rate_slope5</td>
+      <td>-0.304606</td>
+      <td>-0.076151</td>
+      <td>-0.003691</td>
+      <td>2.105803</td>
+      <td>20.630371</td>
+    </tr>
+    <tr>
+      <td>release_extension_slope5</td>
+      <td>-0.466056</td>
+      <td>-0.116514</td>
+      <td>-4.648069</td>
+      <td>-0.000863</td>
+      <td>0.025067</td>
+    </tr>
+    <tr>
+      <td>release_pos_x_slope5</td>
+      <td>0.103415</td>
+      <td>0.025854</td>
+      <td>0.491674</td>
+      <td>-0.001120</td>
+      <td>0.052583</td>
+    </tr>
+    <tr>
+      <td>release_pos_z_slope5</td>
+      <td>-0.144978</td>
+      <td>-0.036244</td>
+      <td>-1.334558</td>
+      <td>0.002125</td>
+      <td>0.027158</td>
+    </tr>
+    <tr>
+      <td>arm_angle_slope5</td>
+      <td>-0.228028</td>
+      <td>-0.057007</td>
+      <td>-0.095149</td>
+      <td>0.012904</td>
+      <td>0.599133</td>
+    </tr>
+    <tr>
+      <td>pfx_x_slope5</td>
+      <td>-0.143436</td>
+      <td>-0.035859</td>
+      <td>-0.933823</td>
+      <td>-0.001136</td>
+      <td>0.038400</td>
+    </tr>
+    <tr>
+      <td>pfx_z_slope5</td>
+      <td>-0.185800</td>
+      <td>-0.046450</td>
+      <td>-1.492459</td>
+      <td>-0.000690</td>
+      <td>0.031123</td>
+    </tr>
+    <tr>
+      <td>breaking_share_slope5</td>
+      <td>-0.060618</td>
+      <td>-0.015155</td>
+      <td>-0.843088</td>
+      <td>0.000259</td>
+      <td>0.017975</td>
+    </tr>
+    <tr>
+      <td>offspeed_share_slope5</td>
+      <td>0.121650</td>
+      <td>0.030412</td>
+      <td>1.514920</td>
+      <td>-0.002076</td>
+      <td>0.020075</td>
+    </tr>
+  </tbody>
+</table></details><details><summary>Logan Gilbert (669302) — 16개 계수</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>standardized_residual_coefficient</th>
+      <th>effective_standardized_coefficient</th>
+      <th>effective_raw_unit_coefficient</th>
+      <th>feature_training_mean</th>
+      <th>feature_training_scale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>prior_minus_ewma4</td>
+      <td>-0.114474</td>
+      <td>-0.028619</td>
+      <td>-0.008387</td>
+      <td>0.155742</td>
+      <td>3.412250</td>
+    </tr>
+    <tr>
+      <td>mean5_minus_ewma4</td>
+      <td>0.076471</td>
+      <td>0.019118</td>
+      <td>0.011678</td>
+      <td>-0.069800</td>
+      <td>1.637109</td>
+    </tr>
+    <tr>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.424465</td>
+      <td>-0.106116</td>
+      <td>-0.056020</td>
+      <td>0.071298</td>
+      <td>1.894258</td>
+    </tr>
+    <tr>
+      <td>prev_start_pitch_count</td>
+      <td>0.218587</td>
+      <td>0.054647</td>
+      <td>0.005079</td>
+      <td>92.509259</td>
+      <td>10.759574</td>
+    </tr>
+    <tr>
+      <td>rest_days</td>
+      <td>-0.075552</td>
+      <td>-0.018888</td>
+      <td>-0.022131</td>
+      <td>5.777778</td>
+      <td>0.853461</td>
+    </tr>
+    <tr>
+      <td>workload_density_3starts</td>
+      <td>-0.110556</td>
+      <td>-0.027639</td>
+      <td>-0.014734</td>
+      <td>16.014346</td>
+      <td>1.875929</td>
+    </tr>
+    <tr>
+      <td>release_speed_slope5</td>
+      <td>0.117547</td>
+      <td>0.029387</td>
+      <td>0.089519</td>
+      <td>0.023461</td>
+      <td>0.328274</td>
+    </tr>
+    <tr>
+      <td>release_spin_rate_slope5</td>
+      <td>0.376915</td>
+      <td>0.094229</td>
+      <td>0.003432</td>
+      <td>-0.498721</td>
+      <td>27.453931</td>
+    </tr>
+    <tr>
+      <td>release_extension_slope5</td>
+      <td>-0.135385</td>
+      <td>-0.033846</td>
+      <td>-0.964847</td>
+      <td>-0.005064</td>
+      <td>0.035079</td>
+    </tr>
+    <tr>
+      <td>release_pos_x_slope5</td>
+      <td>-0.227957</td>
+      <td>-0.056989</td>
+      <td>-0.811713</td>
+      <td>0.010340</td>
+      <td>0.070208</td>
+    </tr>
+    <tr>
+      <td>release_pos_z_slope5</td>
+      <td>0.001711</td>
+      <td>0.000428</td>
+      <td>0.013674</td>
+      <td>0.000608</td>
+      <td>0.031278</td>
+    </tr>
+    <tr>
+      <td>arm_angle_slope5</td>
+      <td>0.036591</td>
+      <td>0.009148</td>
+      <td>0.009813</td>
+      <td>-0.125486</td>
+      <td>0.932189</td>
+    </tr>
+    <tr>
+      <td>pfx_x_slope5</td>
+      <td>-0.049174</td>
+      <td>-0.012293</td>
+      <td>-0.338806</td>
+      <td>-0.002623</td>
+      <td>0.036285</td>
+    </tr>
+    <tr>
+      <td>pfx_z_slope5</td>
+      <td>-0.230261</td>
+      <td>-0.057565</td>
+      <td>-1.223077</td>
+      <td>-0.004309</td>
+      <td>0.047066</td>
+    </tr>
+    <tr>
+      <td>breaking_share_slope5</td>
+      <td>-0.375470</td>
+      <td>-0.093868</td>
+      <td>-3.087121</td>
+      <td>0.001147</td>
+      <td>0.030406</td>
+    </tr>
+    <tr>
+      <td>offspeed_share_slope5</td>
+      <td>-0.028921</td>
+      <td>-0.007230</td>
+      <td>-0.381936</td>
+      <td>0.000716</td>
+      <td>0.018931</td>
+    </tr>
+  </tbody>
+</table></details><details><summary>Logan Webb (657277) — 16개 계수</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>standardized_residual_coefficient</th>
+      <th>effective_standardized_coefficient</th>
+      <th>effective_raw_unit_coefficient</th>
+      <th>feature_training_mean</th>
+      <th>feature_training_scale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>prior_minus_ewma4</td>
+      <td>-0.286656</td>
+      <td>-0.071664</td>
+      <td>-0.019393</td>
+      <td>0.073065</td>
+      <td>3.695443</td>
+    </tr>
+    <tr>
+      <td>mean5_minus_ewma4</td>
+      <td>0.027234</td>
+      <td>0.006808</td>
+      <td>0.004082</td>
+      <td>0.037532</td>
+      <td>1.667916</td>
+    </tr>
+    <tr>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.129570</td>
+      <td>-0.032392</td>
+      <td>-0.016751</td>
+      <td>0.019359</td>
+      <td>1.933710</td>
+    </tr>
+    <tr>
+      <td>prev_start_pitch_count</td>
+      <td>-0.149292</td>
+      <td>-0.037323</td>
+      <td>-0.003521</td>
+      <td>93.940171</td>
+      <td>10.600186</td>
+    </tr>
+    <tr>
+      <td>rest_days</td>
+      <td>-0.110836</td>
+      <td>-0.027709</td>
+      <td>-0.029123</td>
+      <td>5.606838</td>
+      <td>0.951448</td>
+    </tr>
+    <tr>
+      <td>workload_density_3starts</td>
+      <td>-0.292739</td>
+      <td>-0.073185</td>
+      <td>-0.038190</td>
+      <td>16.837426</td>
+      <td>1.916349</td>
+    </tr>
+    <tr>
+      <td>release_speed_slope5</td>
+      <td>0.182534</td>
+      <td>0.045633</td>
+      <td>0.200217</td>
+      <td>0.032447</td>
+      <td>0.227920</td>
+    </tr>
+    <tr>
+      <td>release_spin_rate_slope5</td>
+      <td>-0.085248</td>
+      <td>-0.021312</td>
+      <td>-0.000699</td>
+      <td>-2.061121</td>
+      <td>30.478518</td>
+    </tr>
+    <tr>
+      <td>release_extension_slope5</td>
+      <td>0.448003</td>
+      <td>0.112001</td>
+      <td>2.480921</td>
+      <td>-0.000118</td>
+      <td>0.045145</td>
+    </tr>
+    <tr>
+      <td>release_pos_x_slope5</td>
+      <td>0.007773</td>
+      <td>0.001943</td>
+      <td>0.045467</td>
+      <td>-0.001664</td>
+      <td>0.042739</td>
+    </tr>
+    <tr>
+      <td>release_pos_z_slope5</td>
+      <td>-0.231969</td>
+      <td>-0.057992</td>
+      <td>-2.285158</td>
+      <td>-0.003941</td>
+      <td>0.025378</td>
+    </tr>
+    <tr>
+      <td>arm_angle_slope5</td>
+      <td>0.338587</td>
+      <td>0.084647</td>
+      <td>0.171557</td>
+      <td>-0.095740</td>
+      <td>0.493403</td>
+    </tr>
+    <tr>
+      <td>pfx_x_slope5</td>
+      <td>0.453874</td>
+      <td>0.113468</td>
+      <td>2.197538</td>
+      <td>-0.001537</td>
+      <td>0.051634</td>
+    </tr>
+    <tr>
+      <td>pfx_z_slope5</td>
+      <td>-0.213360</td>
+      <td>-0.053340</td>
+      <td>-2.130389</td>
+      <td>-0.001261</td>
+      <td>0.025038</td>
+    </tr>
+    <tr>
+      <td>breaking_share_slope5</td>
+      <td>0.135337</td>
+      <td>0.033834</td>
+      <td>1.496211</td>
+      <td>-0.001743</td>
+      <td>0.022613</td>
+    </tr>
+    <tr>
+      <td>offspeed_share_slope5</td>
+      <td>0.125854</td>
+      <td>0.031464</td>
+      <td>1.096042</td>
+      <td>-0.000840</td>
+      <td>0.028707</td>
+    </tr>
+  </tbody>
+</table></details><details><summary>Luis Castillo (622491) — 16개 계수</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>standardized_residual_coefficient</th>
+      <th>effective_standardized_coefficient</th>
+      <th>effective_raw_unit_coefficient</th>
+      <th>feature_training_mean</th>
+      <th>feature_training_scale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>prior_minus_ewma4</td>
+      <td>-0.731105</td>
+      <td>-0.182776</td>
+      <td>-0.045119</td>
+      <td>0.287127</td>
+      <td>4.050989</td>
+    </tr>
+    <tr>
+      <td>mean5_minus_ewma4</td>
+      <td>-0.167670</td>
+      <td>-0.041917</td>
+      <td>-0.022696</td>
+      <td>-0.206857</td>
+      <td>1.846930</td>
+    </tr>
+    <tr>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.274464</td>
+      <td>-0.068616</td>
+      <td>-0.031878</td>
+      <td>0.149594</td>
+      <td>2.152484</td>
+    </tr>
+    <tr>
+      <td>prev_start_pitch_count</td>
+      <td>-0.399797</td>
+      <td>-0.099949</td>
+      <td>-0.012082</td>
+      <td>98.635593</td>
+      <td>8.272545</td>
+    </tr>
+    <tr>
+      <td>rest_days</td>
+      <td>-0.669604</td>
+      <td>-0.167401</td>
+      <td>-0.165813</td>
+      <td>5.779661</td>
+      <td>1.009578</td>
+    </tr>
+    <tr>
+      <td>workload_density_3starts</td>
+      <td>-0.225004</td>
+      <td>-0.056251</td>
+      <td>-0.034772</td>
+      <td>17.116029</td>
+      <td>1.617692</td>
+    </tr>
+    <tr>
+      <td>release_speed_slope5</td>
+      <td>-0.432279</td>
+      <td>-0.108070</td>
+      <td>-0.349561</td>
+      <td>0.022315</td>
+      <td>0.309158</td>
+    </tr>
+    <tr>
+      <td>release_spin_rate_slope5</td>
+      <td>0.177134</td>
+      <td>0.044284</td>
+      <td>0.002336</td>
+      <td>0.546924</td>
+      <td>18.957060</td>
+    </tr>
+    <tr>
+      <td>release_extension_slope5</td>
+      <td>0.268408</td>
+      <td>0.067102</td>
+      <td>2.338960</td>
+      <td>0.001281</td>
+      <td>0.028689</td>
+    </tr>
+    <tr>
+      <td>release_pos_x_slope5</td>
+      <td>0.341783</td>
+      <td>0.085446</td>
+      <td>1.486050</td>
+      <td>0.007763</td>
+      <td>0.057499</td>
+    </tr>
+    <tr>
+      <td>release_pos_z_slope5</td>
+      <td>-0.249151</td>
+      <td>-0.062288</td>
+      <td>-2.811299</td>
+      <td>-0.003706</td>
+      <td>0.022156</td>
+    </tr>
+    <tr>
+      <td>arm_angle_slope5</td>
+      <td>-0.349558</td>
+      <td>-0.087390</td>
+      <td>-0.213013</td>
+      <td>-0.066526</td>
+      <td>0.410254</td>
+    </tr>
+    <tr>
+      <td>pfx_x_slope5</td>
+      <td>0.138281</td>
+      <td>0.034570</td>
+      <td>0.812994</td>
+      <td>0.000500</td>
+      <td>0.042522</td>
+    </tr>
+    <tr>
+      <td>pfx_z_slope5</td>
+      <td>0.408812</td>
+      <td>0.102203</td>
+      <td>2.947754</td>
+      <td>0.000015</td>
+      <td>0.034671</td>
+    </tr>
+    <tr>
+      <td>breaking_share_slope5</td>
+      <td>-0.187544</td>
+      <td>-0.046886</td>
+      <td>-2.286704</td>
+      <td>0.001133</td>
+      <td>0.020504</td>
+    </tr>
+    <tr>
+      <td>offspeed_share_slope5</td>
+      <td>0.041530</td>
+      <td>0.010383</td>
+      <td>0.452222</td>
+      <td>-0.001771</td>
+      <td>0.022959</td>
+    </tr>
+  </tbody>
+</table></details><details><summary>Michael Wacha (608379) — 16개 계수</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>standardized_residual_coefficient</th>
+      <th>effective_standardized_coefficient</th>
+      <th>effective_raw_unit_coefficient</th>
+      <th>feature_training_mean</th>
+      <th>feature_training_scale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>prior_minus_ewma4</td>
+      <td>-0.267870</td>
+      <td>-0.066968</td>
+      <td>-0.020597</td>
+      <td>0.325653</td>
+      <td>3.251334</td>
+    </tr>
+    <tr>
+      <td>mean5_minus_ewma4</td>
+      <td>0.445097</td>
+      <td>0.111274</td>
+      <td>0.081606</td>
+      <td>-0.164591</td>
+      <td>1.363552</td>
+    </tr>
+    <tr>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.483846</td>
+      <td>-0.120962</td>
+      <td>-0.078436</td>
+      <td>0.239302</td>
+      <td>1.542174</td>
+    </tr>
+    <tr>
+      <td>prev_start_pitch_count</td>
+      <td>-0.279842</td>
+      <td>-0.069961</td>
+      <td>-0.005489</td>
+      <td>87.468354</td>
+      <td>12.746641</td>
+    </tr>
+    <tr>
+      <td>rest_days</td>
+      <td>-0.095598</td>
+      <td>-0.023900</td>
+      <td>-0.008703</td>
+      <td>6.518987</td>
+      <td>2.746048</td>
+    </tr>
+    <tr>
+      <td>workload_density_3starts</td>
+      <td>-0.212058</td>
+      <td>-0.053015</td>
+      <td>-0.016204</td>
+      <td>14.118673</td>
+      <td>3.271778</td>
+    </tr>
+    <tr>
+      <td>release_speed_slope5</td>
+      <td>0.234903</td>
+      <td>0.058726</td>
+      <td>0.178832</td>
+      <td>0.010571</td>
+      <td>0.328385</td>
+    </tr>
+    <tr>
+      <td>release_spin_rate_slope5</td>
+      <td>0.189470</td>
+      <td>0.047367</td>
+      <td>0.003493</td>
+      <td>-0.801716</td>
+      <td>13.559206</td>
+    </tr>
+    <tr>
+      <td>release_extension_slope5</td>
+      <td>-0.116854</td>
+      <td>-0.029214</td>
+      <td>-0.859708</td>
+      <td>-0.000126</td>
+      <td>0.033981</td>
+    </tr>
+    <tr>
+      <td>release_pos_x_slope5</td>
+      <td>-0.156605</td>
+      <td>-0.039151</td>
+      <td>-1.253083</td>
+      <td>-0.000880</td>
+      <td>0.031244</td>
+    </tr>
+    <tr>
+      <td>release_pos_z_slope5</td>
+      <td>-0.001442</td>
+      <td>-0.000361</td>
+      <td>-0.013573</td>
+      <td>-0.003728</td>
+      <td>0.026568</td>
+    </tr>
+    <tr>
+      <td>arm_angle_slope5</td>
+      <td>0.166275</td>
+      <td>0.041569</td>
+      <td>0.093199</td>
+      <td>-0.034943</td>
+      <td>0.446025</td>
+    </tr>
+    <tr>
+      <td>pfx_x_slope5</td>
+      <td>0.007816</td>
+      <td>0.001954</td>
+      <td>0.059484</td>
+      <td>-0.007942</td>
+      <td>0.032851</td>
+    </tr>
+    <tr>
+      <td>pfx_z_slope5</td>
+      <td>0.131528</td>
+      <td>0.032882</td>
+      <td>0.828232</td>
+      <td>0.003106</td>
+      <td>0.039701</td>
+    </tr>
+    <tr>
+      <td>breaking_share_slope5</td>
+      <td>-0.040694</td>
+      <td>-0.010173</td>
+      <td>-0.747848</td>
+      <td>0.000116</td>
+      <td>0.013604</td>
+    </tr>
+    <tr>
+      <td>offspeed_share_slope5</td>
+      <td>0.042862</td>
+      <td>0.010716</td>
+      <td>0.566322</td>
+      <td>-0.000432</td>
+      <td>0.018921</td>
+    </tr>
+  </tbody>
+</table></details><details><summary>Mitch Keller (656605) — 16개 계수</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>standardized_residual_coefficient</th>
+      <th>effective_standardized_coefficient</th>
+      <th>effective_raw_unit_coefficient</th>
+      <th>feature_training_mean</th>
+      <th>feature_training_scale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>prior_minus_ewma4</td>
+      <td>-0.215036</td>
+      <td>-0.053759</td>
+      <td>-0.015470</td>
+      <td>-0.166640</td>
+      <td>3.475123</td>
+    </tr>
+    <tr>
+      <td>mean5_minus_ewma4</td>
+      <td>0.258584</td>
+      <td>0.064646</td>
+      <td>0.041828</td>
+      <td>0.112300</td>
+      <td>1.545534</td>
+    </tr>
+    <tr>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.335886</td>
+      <td>-0.083972</td>
+      <td>-0.047003</td>
+      <td>-0.125629</td>
+      <td>1.786510</td>
+    </tr>
+    <tr>
+      <td>prev_start_pitch_count</td>
+      <td>0.258482</td>
+      <td>0.064621</td>
+      <td>0.005590</td>
+      <td>91.234694</td>
+      <td>11.559783</td>
+    </tr>
+    <tr>
+      <td>rest_days</td>
+      <td>0.596031</td>
+      <td>0.149008</td>
+      <td>0.100891</td>
+      <td>6.112245</td>
+      <td>1.476915</td>
+    </tr>
+    <tr>
+      <td>workload_density_3starts</td>
+      <td>-0.057861</td>
+      <td>-0.014465</td>
+      <td>-0.006363</td>
+      <td>15.228469</td>
+      <td>2.273471</td>
+    </tr>
+    <tr>
+      <td>release_speed_slope5</td>
+      <td>-0.306126</td>
+      <td>-0.076532</td>
+      <td>-0.172604</td>
+      <td>-0.031551</td>
+      <td>0.443393</td>
+    </tr>
+    <tr>
+      <td>release_spin_rate_slope5</td>
+      <td>-0.476149</td>
+      <td>-0.119037</td>
+      <td>-0.008217</td>
+      <td>1.058366</td>
+      <td>14.486893</td>
+    </tr>
+    <tr>
+      <td>release_extension_slope5</td>
+      <td>0.091883</td>
+      <td>0.022971</td>
+      <td>0.724621</td>
+      <td>0.003451</td>
+      <td>0.031700</td>
+    </tr>
+    <tr>
+      <td>release_pos_x_slope5</td>
+      <td>-0.079946</td>
+      <td>-0.019986</td>
+      <td>-0.873711</td>
+      <td>-0.001378</td>
+      <td>0.022875</td>
+    </tr>
+    <tr>
+      <td>release_pos_z_slope5</td>
+      <td>-0.176165</td>
+      <td>-0.044041</td>
+      <td>-2.156986</td>
+      <td>-0.005335</td>
+      <td>0.020418</td>
+    </tr>
+    <tr>
+      <td>arm_angle_slope5</td>
+      <td>0.190030</td>
+      <td>0.047508</td>
+      <td>0.119186</td>
+      <td>-0.123810</td>
+      <td>0.398602</td>
+    </tr>
+    <tr>
+      <td>pfx_x_slope5</td>
+      <td>0.004425</td>
+      <td>0.001106</td>
+      <td>0.017714</td>
+      <td>0.001446</td>
+      <td>0.062448</td>
+    </tr>
+    <tr>
+      <td>pfx_z_slope5</td>
+      <td>0.238522</td>
+      <td>0.059631</td>
+      <td>1.262170</td>
+      <td>-0.000675</td>
+      <td>0.047244</td>
+    </tr>
+    <tr>
+      <td>breaking_share_slope5</td>
+      <td>-0.424976</td>
+      <td>-0.106244</td>
+      <td>-4.147233</td>
+      <td>0.001125</td>
+      <td>0.025618</td>
+    </tr>
+    <tr>
+      <td>offspeed_share_slope5</td>
+      <td>-0.342003</td>
+      <td>-0.085501</td>
+      <td>-9.832865</td>
+      <td>-0.000765</td>
+      <td>0.008695</td>
+    </tr>
+  </tbody>
+</table></details><details><summary>Patrick Corbin (571578) — 16개 계수</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>standardized_residual_coefficient</th>
+      <th>effective_standardized_coefficient</th>
+      <th>effective_raw_unit_coefficient</th>
+      <th>feature_training_mean</th>
+      <th>feature_training_scale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>prior_minus_ewma4</td>
+      <td>-0.546281</td>
+      <td>-0.136570</td>
+      <td>-0.048829</td>
+      <td>0.086987</td>
+      <td>2.796904</td>
+    </tr>
+    <tr>
+      <td>mean5_minus_ewma4</td>
+      <td>0.266918</td>
+      <td>0.066729</td>
+      <td>0.061224</td>
+      <td>-0.009825</td>
+      <td>1.089926</td>
+    </tr>
+    <tr>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.128767</td>
+      <td>-0.032192</td>
+      <td>-0.025657</td>
+      <td>0.076554</td>
+      <td>1.254681</td>
+    </tr>
+    <tr>
+      <td>prev_start_pitch_count</td>
+      <td>-0.121844</td>
+      <td>-0.030461</td>
+      <td>-0.002169</td>
+      <td>89.815126</td>
+      <td>14.041335</td>
+    </tr>
+    <tr>
+      <td>rest_days</td>
+      <td>0.426246</td>
+      <td>0.106562</td>
+      <td>0.095369</td>
+      <td>5.857143</td>
+      <td>1.117363</td>
+    </tr>
+    <tr>
+      <td>workload_density_3starts</td>
+      <td>-0.099671</td>
+      <td>-0.024918</td>
+      <td>-0.013439</td>
+      <td>15.632098</td>
+      <td>1.854152</td>
+    </tr>
+    <tr>
+      <td>release_speed_slope5</td>
+      <td>0.017883</td>
+      <td>0.004471</td>
+      <td>0.013867</td>
+      <td>0.023718</td>
+      <td>0.322395</td>
+    </tr>
+    <tr>
+      <td>release_spin_rate_slope5</td>
+      <td>0.154064</td>
+      <td>0.038516</td>
+      <td>0.002459</td>
+      <td>-0.270791</td>
+      <td>15.662220</td>
+    </tr>
+    <tr>
+      <td>release_extension_slope5</td>
+      <td>0.306896</td>
+      <td>0.076724</td>
+      <td>2.555376</td>
+      <td>-0.001429</td>
+      <td>0.030025</td>
+    </tr>
+    <tr>
+      <td>release_pos_x_slope5</td>
+      <td>-0.155260</td>
+      <td>-0.038815</td>
+      <td>-1.351300</td>
+      <td>0.000901</td>
+      <td>0.028724</td>
+    </tr>
+    <tr>
+      <td>release_pos_z_slope5</td>
+      <td>0.419989</td>
+      <td>0.104997</td>
+      <td>4.721663</td>
+      <td>-0.001535</td>
+      <td>0.022237</td>
+    </tr>
+    <tr>
+      <td>arm_angle_slope5</td>
+      <td>0.233824</td>
+      <td>0.058456</td>
+      <td>0.139307</td>
+      <td>-0.041657</td>
+      <td>0.419619</td>
+    </tr>
+    <tr>
+      <td>pfx_x_slope5</td>
+      <td>-0.018594</td>
+      <td>-0.004648</td>
+      <td>-0.118250</td>
+      <td>0.002388</td>
+      <td>0.039310</td>
+    </tr>
+    <tr>
+      <td>pfx_z_slope5</td>
+      <td>-0.150477</td>
+      <td>-0.037619</td>
+      <td>-1.297084</td>
+      <td>-0.001353</td>
+      <td>0.029003</td>
+    </tr>
+    <tr>
+      <td>breaking_share_slope5</td>
+      <td>0.168084</td>
+      <td>0.042021</td>
+      <td>1.695873</td>
+      <td>-0.000248</td>
+      <td>0.024778</td>
+    </tr>
+    <tr>
+      <td>offspeed_share_slope5</td>
+      <td>0.026967</td>
+      <td>0.006742</td>
+      <td>0.550391</td>
+      <td>0.000004</td>
+      <td>0.012249</td>
+    </tr>
+  </tbody>
+</table></details><details><summary>Sonny Gray (543243) — 16개 계수</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>standardized_residual_coefficient</th>
+      <th>effective_standardized_coefficient</th>
+      <th>effective_raw_unit_coefficient</th>
+      <th>feature_training_mean</th>
+      <th>feature_training_scale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>prior_minus_ewma4</td>
+      <td>0.171608</td>
+      <td>0.042902</td>
+      <td>0.012578</td>
+      <td>0.166358</td>
+      <td>3.410799</td>
+    </tr>
+    <tr>
+      <td>mean5_minus_ewma4</td>
+      <td>0.176330</td>
+      <td>0.044082</td>
+      <td>0.027109</td>
+      <td>-0.020450</td>
+      <td>1.626102</td>
+    </tr>
+    <tr>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.510566</td>
+      <td>-0.127642</td>
+      <td>-0.068230</td>
+      <td>-0.036483</td>
+      <td>1.870744</td>
+    </tr>
+    <tr>
+      <td>prev_start_pitch_count</td>
+      <td>-0.497970</td>
+      <td>-0.124492</td>
+      <td>-0.011521</td>
+      <td>87.640000</td>
+      <td>10.806035</td>
+    </tr>
+    <tr>
+      <td>rest_days</td>
+      <td>-0.098118</td>
+      <td>-0.024530</td>
+      <td>-0.015989</td>
+      <td>6.080000</td>
+      <td>1.534145</td>
+    </tr>
+    <tr>
+      <td>workload_density_3starts</td>
+      <td>-0.283198</td>
+      <td>-0.070799</td>
+      <td>-0.029041</td>
+      <td>14.624372</td>
+      <td>2.437905</td>
+    </tr>
+    <tr>
+      <td>release_speed_slope5</td>
+      <td>-0.051967</td>
+      <td>-0.012992</td>
+      <td>-0.045547</td>
+      <td>0.027832</td>
+      <td>0.285239</td>
+    </tr>
+    <tr>
+      <td>release_spin_rate_slope5</td>
+      <td>0.053724</td>
+      <td>0.013431</td>
+      <td>0.000441</td>
+      <td>3.037217</td>
+      <td>30.424292</td>
+    </tr>
+    <tr>
+      <td>release_extension_slope5</td>
+      <td>0.124776</td>
+      <td>0.031194</td>
+      <td>1.011516</td>
+      <td>0.002613</td>
+      <td>0.030839</td>
+    </tr>
+    <tr>
+      <td>release_pos_x_slope5</td>
+      <td>-0.023949</td>
+      <td>-0.005987</td>
+      <td>-0.108243</td>
+      <td>-0.000441</td>
+      <td>0.055314</td>
+    </tr>
+    <tr>
+      <td>release_pos_z_slope5</td>
+      <td>-0.058304</td>
+      <td>-0.014576</td>
+      <td>-0.659608</td>
+      <td>-0.002400</td>
+      <td>0.022098</td>
+    </tr>
+    <tr>
+      <td>arm_angle_slope5</td>
+      <td>0.057192</td>
+      <td>0.014298</td>
+      <td>0.029637</td>
+      <td>-0.011755</td>
+      <td>0.482444</td>
+    </tr>
+    <tr>
+      <td>pfx_x_slope5</td>
+      <td>0.047587</td>
+      <td>0.011897</td>
+      <td>0.241751</td>
+      <td>-0.001008</td>
+      <td>0.049211</td>
+    </tr>
+    <tr>
+      <td>pfx_z_slope5</td>
+      <td>-0.036779</td>
+      <td>-0.009195</td>
+      <td>-0.217472</td>
+      <td>0.001301</td>
+      <td>0.042280</td>
+    </tr>
+    <tr>
+      <td>breaking_share_slope5</td>
+      <td>0.142098</td>
+      <td>0.035524</td>
+      <td>1.694098</td>
+      <td>-0.000816</td>
+      <td>0.020970</td>
+    </tr>
+    <tr>
+      <td>offspeed_share_slope5</td>
+      <td>0.174159</td>
+      <td>0.043540</td>
+      <td>3.314985</td>
+      <td>0.000191</td>
+      <td>0.013134</td>
+    </tr>
+  </tbody>
+</table></details><details><summary>Tyler Anderson (542881) — 16개 계수</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>standardized_residual_coefficient</th>
+      <th>effective_standardized_coefficient</th>
+      <th>effective_raw_unit_coefficient</th>
+      <th>feature_training_mean</th>
+      <th>feature_training_scale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>prior_minus_ewma4</td>
+      <td>0.285385</td>
+      <td>0.071346</td>
+      <td>0.026478</td>
+      <td>0.101742</td>
+      <td>2.694532</td>
+    </tr>
+    <tr>
+      <td>mean5_minus_ewma4</td>
+      <td>0.344359</td>
+      <td>0.086090</td>
+      <td>0.067004</td>
+      <td>0.024582</td>
+      <td>1.284840</td>
+    </tr>
+    <tr>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.324852</td>
+      <td>-0.081213</td>
+      <td>-0.048474</td>
+      <td>0.073469</td>
+      <td>1.675402</td>
+    </tr>
+    <tr>
+      <td>prev_start_pitch_count</td>
+      <td>-0.034315</td>
+      <td>-0.008579</td>
+      <td>-0.000842</td>
+      <td>90.314815</td>
+      <td>10.187727</td>
+    </tr>
+    <tr>
+      <td>rest_days</td>
+      <td>0.227739</td>
+      <td>0.056935</td>
+      <td>0.039507</td>
+      <td>6.185185</td>
+      <td>1.441117</td>
+    </tr>
+    <tr>
+      <td>workload_density_3starts</td>
+      <td>-0.001060</td>
+      <td>-0.000265</td>
+      <td>-0.000120</td>
+      <td>14.690264</td>
+      <td>2.203446</td>
+    </tr>
+    <tr>
+      <td>release_speed_slope5</td>
+      <td>-0.212410</td>
+      <td>-0.053103</td>
+      <td>-0.195792</td>
+      <td>0.013991</td>
+      <td>0.271219</td>
+    </tr>
+    <tr>
+      <td>release_spin_rate_slope5</td>
+      <td>-0.142392</td>
+      <td>-0.035598</td>
+      <td>-0.001563</td>
+      <td>-2.848180</td>
+      <td>22.780808</td>
+    </tr>
+    <tr>
+      <td>release_extension_slope5</td>
+      <td>-0.049517</td>
+      <td>-0.012379</td>
+      <td>-0.355129</td>
+      <td>0.003038</td>
+      <td>0.034858</td>
+    </tr>
+    <tr>
+      <td>release_pos_x_slope5</td>
+      <td>-0.071180</td>
+      <td>-0.017795</td>
+      <td>-0.464152</td>
+      <td>-0.003095</td>
+      <td>0.038339</td>
+    </tr>
+    <tr>
+      <td>release_pos_z_slope5</td>
+      <td>0.193139</td>
+      <td>0.048285</td>
+      <td>1.688521</td>
+      <td>0.000722</td>
+      <td>0.028596</td>
+    </tr>
+    <tr>
+      <td>arm_angle_slope5</td>
+      <td>0.119741</td>
+      <td>0.029935</td>
+      <td>0.040594</td>
+      <td>-0.041512</td>
+      <td>0.737442</td>
+    </tr>
+    <tr>
+      <td>pfx_x_slope5</td>
+      <td>0.062934</td>
+      <td>0.015733</td>
+      <td>0.349630</td>
+      <td>0.005639</td>
+      <td>0.045000</td>
+    </tr>
+    <tr>
+      <td>pfx_z_slope5</td>
+      <td>-0.009349</td>
+      <td>-0.002337</td>
+      <td>-0.062232</td>
+      <td>0.000517</td>
+      <td>0.037558</td>
+    </tr>
+    <tr>
+      <td>breaking_share_slope5</td>
+      <td>-0.111311</td>
+      <td>-0.027828</td>
+      <td>-4.237531</td>
+      <td>-0.000041</td>
+      <td>0.006567</td>
+    </tr>
+    <tr>
+      <td>offspeed_share_slope5</td>
+      <td>0.059680</td>
+      <td>0.014920</td>
+      <td>0.572878</td>
+      <td>0.002856</td>
+      <td>0.026044</td>
+    </tr>
+  </tbody>
+</table></details><details><summary>Zac Gallen (668678) — 16개 계수</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>standardized_residual_coefficient</th>
+      <th>effective_standardized_coefficient</th>
+      <th>effective_raw_unit_coefficient</th>
+      <th>feature_training_mean</th>
+      <th>feature_training_scale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>prior_minus_ewma4</td>
+      <td>-0.198685</td>
+      <td>-0.049671</td>
+      <td>-0.013710</td>
+      <td>-0.240935</td>
+      <td>3.623045</td>
+    </tr>
+    <tr>
+      <td>mean5_minus_ewma4</td>
+      <td>0.305199</td>
+      <td>0.076300</td>
+      <td>0.047459</td>
+      <td>0.112252</td>
+      <td>1.607703</td>
+    </tr>
+    <tr>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.324272</td>
+      <td>-0.081068</td>
+      <td>-0.044051</td>
+      <td>-0.303813</td>
+      <td>1.840336</td>
+    </tr>
+    <tr>
+      <td>prev_start_pitch_count</td>
+      <td>0.188550</td>
+      <td>0.047138</td>
+      <td>0.005370</td>
+      <td>94.867925</td>
+      <td>8.777195</td>
+    </tr>
+    <tr>
+      <td>rest_days</td>
+      <td>-0.608639</td>
+      <td>-0.152160</td>
+      <td>-0.119160</td>
+      <td>5.801887</td>
+      <td>1.276935</td>
+    </tr>
+    <tr>
+      <td>workload_density_3starts</td>
+      <td>-0.085291</td>
+      <td>-0.021323</td>
+      <td>-0.010322</td>
+      <td>16.535741</td>
+      <td>2.065818</td>
+    </tr>
+    <tr>
+      <td>release_speed_slope5</td>
+      <td>0.005217</td>
+      <td>0.001304</td>
+      <td>0.004009</td>
+      <td>-0.012776</td>
+      <td>0.325309</td>
+    </tr>
+    <tr>
+      <td>release_spin_rate_slope5</td>
+      <td>-0.001642</td>
+      <td>-0.000411</td>
+      <td>-0.000019</td>
+      <td>1.303700</td>
+      <td>21.195626</td>
+    </tr>
+    <tr>
+      <td>release_extension_slope5</td>
+      <td>-0.202693</td>
+      <td>-0.050673</td>
+      <td>-1.522000</td>
+      <td>0.001668</td>
+      <td>0.033294</td>
+    </tr>
+    <tr>
+      <td>release_pos_x_slope5</td>
+      <td>-0.180867</td>
+      <td>-0.045217</td>
+      <td>-1.128160</td>
+      <td>0.000662</td>
+      <td>0.040080</td>
+    </tr>
+    <tr>
+      <td>release_pos_z_slope5</td>
+      <td>-0.014695</td>
+      <td>-0.003674</td>
+      <td>-0.150455</td>
+      <td>0.001341</td>
+      <td>0.024417</td>
+    </tr>
+    <tr>
+      <td>arm_angle_slope5</td>
+      <td>-0.223013</td>
+      <td>-0.055753</td>
+      <td>-0.089903</td>
+      <td>-0.028196</td>
+      <td>0.620146</td>
+    </tr>
+    <tr>
+      <td>pfx_x_slope5</td>
+      <td>0.021267</td>
+      <td>0.005317</td>
+      <td>0.147052</td>
+      <td>0.005503</td>
+      <td>0.036156</td>
+    </tr>
+    <tr>
+      <td>pfx_z_slope5</td>
+      <td>-0.039019</td>
+      <td>-0.009755</td>
+      <td>-0.208565</td>
+      <td>-0.005835</td>
+      <td>0.046770</td>
+    </tr>
+    <tr>
+      <td>breaking_share_slope5</td>
+      <td>0.325612</td>
+      <td>0.081403</td>
+      <td>3.861764</td>
+      <td>0.001675</td>
+      <td>0.021079</td>
+    </tr>
+    <tr>
+      <td>offspeed_share_slope5</td>
+      <td>-0.129283</td>
+      <td>-0.032321</td>
+      <td>-1.843466</td>
+      <td>-0.000753</td>
+      <td>0.017533</td>
+    </tr>
+  </tbody>
+</table></details><details><summary>Zack Wheeler (554430) — 16개 계수</summary><table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>feature</th>
+      <th>standardized_residual_coefficient</th>
+      <th>effective_standardized_coefficient</th>
+      <th>effective_raw_unit_coefficient</th>
+      <th>feature_training_mean</th>
+      <th>feature_training_scale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>prior_minus_ewma4</td>
+      <td>-0.509690</td>
+      <td>-0.127423</td>
+      <td>-0.037569</td>
+      <td>0.070769</td>
+      <td>3.391728</td>
+    </tr>
+    <tr>
+      <td>mean5_minus_ewma4</td>
+      <td>0.070422</td>
+      <td>0.017605</td>
+      <td>0.011478</td>
+      <td>-0.030675</td>
+      <td>1.533818</td>
+    </tr>
+    <tr>
+      <td>stuff_plus_slope_last5</td>
+      <td>-0.377244</td>
+      <td>-0.094311</td>
+      <td>-0.054230</td>
+      <td>0.031856</td>
+      <td>1.739090</td>
+    </tr>
+    <tr>
+      <td>prev_start_pitch_count</td>
+      <td>-0.078318</td>
+      <td>-0.019580</td>
+      <td>-0.002299</td>
+      <td>99.226087</td>
+      <td>8.517053</td>
+    </tr>
+    <tr>
+      <td>rest_days</td>
+      <td>-0.040979</td>
+      <td>-0.010245</td>
+      <td>-0.008178</td>
+      <td>5.852174</td>
+      <td>1.252778</td>
+    </tr>
+    <tr>
+      <td>workload_density_3starts</td>
+      <td>0.122403</td>
+      <td>0.030601</td>
+      <td>0.015868</td>
+      <td>16.975237</td>
+      <td>1.928492</td>
+    </tr>
+    <tr>
+      <td>release_speed_slope5</td>
+      <td>0.353126</td>
+      <td>0.088281</td>
+      <td>0.308177</td>
+      <td>0.034667</td>
+      <td>0.286463</td>
+    </tr>
+    <tr>
+      <td>release_spin_rate_slope5</td>
+      <td>0.550331</td>
+      <td>0.137583</td>
+      <td>0.008671</td>
+      <td>1.524488</td>
+      <td>15.867529</td>
+    </tr>
+    <tr>
+      <td>release_extension_slope5</td>
+      <td>-0.135031</td>
+      <td>-0.033758</td>
+      <td>-0.898156</td>
+      <td>0.001110</td>
+      <td>0.037586</td>
+    </tr>
+    <tr>
+      <td>release_pos_x_slope5</td>
+      <td>-0.022481</td>
+      <td>-0.005620</td>
+      <td>-0.219102</td>
+      <td>-0.001648</td>
+      <td>0.025652</td>
+    </tr>
+    <tr>
+      <td>release_pos_z_slope5</td>
+      <td>0.451089</td>
+      <td>0.112772</td>
+      <td>4.092187</td>
+      <td>-0.005896</td>
+      <td>0.027558</td>
+    </tr>
+    <tr>
+      <td>arm_angle_slope5</td>
+      <td>-0.081028</td>
+      <td>-0.020257</td>
+      <td>-0.062506</td>
+      <td>-0.102824</td>
+      <td>0.324079</td>
+    </tr>
+    <tr>
+      <td>pfx_x_slope5</td>
+      <td>0.155114</td>
+      <td>0.038778</td>
+      <td>0.903246</td>
+      <td>0.002123</td>
+      <td>0.042932</td>
+    </tr>
+    <tr>
+      <td>pfx_z_slope5</td>
+      <td>-0.167147</td>
+      <td>-0.041787</td>
+      <td>-1.251695</td>
+      <td>-0.000516</td>
+      <td>0.033384</td>
+    </tr>
+    <tr>
+      <td>breaking_share_slope5</td>
+      <td>-0.048335</td>
+      <td>-0.012084</td>
+      <td>-0.783238</td>
+      <td>0.000184</td>
+      <td>0.015428</td>
+    </tr>
+    <tr>
+      <td>offspeed_share_slope5</td>
+      <td>-0.050377</td>
+      <td>-0.012594</td>
+      <td>-1.285090</td>
+      <td>-0.001095</td>
+      <td>0.009800</td>
+    </tr>
+  </tbody>
+</table></details>
+    <h2>7. 해석상 주의점</h2><ul><li>선수별 Ridge는 표본이 작고 feature끼리 상관되므로 계수 부호가 불안정할 수 있다.</li><li>TCN은 248개 파라미터의 공동 모델로, 선수별 bias를 포함하지만 단순 계수표는 제공하지 않는다.</li><li>등급은 선수별 학습 q33/q67로 나누므로 서로 다른 선수의 Low/Middle/High를 절대 수준처럼 비교하면 안 된다.</li><li>같은 예측값이 나오는 경우는 모델이 EWMA 보정을 0에 가깝게 내거나 반올림된 경우이며, 원본 CSV에는 반올림 전 값이 저장된다.</li></ul>
+    <h2>8. 재현 산출물</h2><p><code>replay_tcn_ridge_report.py</code>, <code>latest_player_predictions.csv</code>, <code>ridge_coefficients_all.csv</code>, <code>predictions_2025.parquet</code>, <code>metrics_*.csv</code>.</p>
+    </main></body></html>

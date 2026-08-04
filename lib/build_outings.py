@@ -2,10 +2,15 @@
 from __future__ import annotations
 
 import argparse
+import warnings
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+
+class StarterInferenceWarning(UserWarning):
+    """The observed Statcast rows cannot prove that a pitcher was the starter."""
 
 
 # %%
@@ -46,31 +51,134 @@ def _pitch_mix(pitches: pd.DataFrame, keys: list[str]) -> pd.DataFrame:
 
 
 # %%
+def _derive_pitching_team(pitches: pd.DataFrame) -> pd.DataFrame:
+    """Attach the fielding team when Statcast did not supply it directly."""
+
+    out = pitches.copy()
+    if "pitching_team" not in out.columns:
+        out["pitching_team"] = pd.NA
+    if {"home_team", "away_team", "inning_topbot"}.issubset(out.columns):
+        half = out["inning_topbot"].astype("string").str.strip().str.lower()
+        inferred = pd.Series(pd.NA, index=out.index, dtype="string")
+        inferred.loc[half.str.startswith("top", na=False)] = (
+            out.loc[half.str.startswith("top", na=False), "home_team"]
+            .astype("string")
+            .str.upper()
+        )
+        inferred.loc[half.str.startswith("bot", na=False)] = (
+            out.loc[half.str.startswith("bot", na=False), "away_team"]
+            .astype("string")
+            .str.upper()
+        )
+        current = out["pitching_team"].astype("string")
+        out["pitching_team"] = current.where(current.notna() & current.ne(""), inferred)
+    return out
+
+
+# %%
 def _first_pitcher_by_game(pitches: pd.DataFrame) -> pd.Series:
-    """Return the first pitcher seen chronologically for each game."""
+    """Return both teams' first-inning pitchers for every game.
+
+    A game has two starters.  Grouping only on ``game_pk`` silently selected
+    whichever club happened to pitch first.  We prefer the fielding team and
+    fall back to Statcast's top/bottom half marker.  Requiring the group's first
+    observed inning to be inning one also keeps this inference correct for
+    pitcher-specific Statcast files that contain relief appearances.
+    """
+
     if "inning" not in pitches.columns:
         raise ValueError("Cannot identify the first pitcher because inning is missing.")
 
-    ordered = pitches.copy()
-    sort_columns = ["game_pk", "inning"]
+    ordered = _derive_pitching_team(pitches)
+    if "pitching_team" in ordered.columns and ordered["pitching_team"].notna().any():
+        side_column = "pitching_team"
+    elif "inning_topbot" in ordered.columns:
+        side_column = "inning_topbot"
+    else:
+        raise ValueError(
+            "Cannot identify both starting pitchers because pitching_team and "
+            "inning_topbot are missing."
+        )
+
+    sort_columns = ["game_pk", side_column, "inning"]
     ordered["inning"] = pd.to_numeric(ordered["inning"], errors="coerce")
     for column in ["at_bat_number", "pitch_number"]:
         if column in ordered.columns:
             ordered[column] = pd.to_numeric(ordered[column], errors="coerce")
             sort_columns.append(column)
     ordered = ordered.sort_values(sort_columns, kind="stable")
-    return ordered.groupby("game_pk", sort=False)["pitcher"].first()
+    group_columns = ["game_pk", side_column]
+    first_rows = ordered.groupby(group_columns, sort=False, as_index=False).first()
+    first_rows = first_rows.loc[first_rows["inning"].eq(1)]
+    return first_rows.set_index(group_columns)["pitcher"]
+
+
+def _numeric_boolean(series: pd.Series) -> pd.Series:
+    numeric = pd.to_numeric(series, errors="coerce")
+    text = series.astype("string").str.strip().str.lower()
+    result = numeric.gt(0)
+    result.loc[text.isin({"true", "t", "yes", "y", "starter", "starting"})] = True
+    result.loc[text.isin({"false", "f", "no", "n", "reliever", "relief"})] = False
+    return result.fillna(False)
+
+
+def _explicit_starter_values(pitches: pd.DataFrame) -> tuple[pd.Series, str] | None:
+    """Coalesce row-level starter aliases without letting a null alias win.
+
+    Concatenating files with slightly different schemas commonly creates both
+    ``is_starting_pitcher`` and ``GS`` columns, with one populated per source
+    row.  Choosing one column globally turns the other source's starts into
+    relievers.
+    """
+
+    columns = [
+        column
+        for column in ("is_starting_pitcher", "GS")
+        if column in pitches.columns
+    ]
+    if not columns:
+        return None
+    values = pd.Series(pd.NA, index=pitches.index, dtype="object")
+    parsed: list[tuple[str, pd.Series]] = []
+    for column in columns:
+        raw = pitches[column]
+        known = raw.notna() & raw.astype("string").str.strip().ne("")
+        boolean = _numeric_boolean(raw)
+        parsed.append((column, boolean.where(known)))
+        values = values.where(values.notna(), raw.where(known))
+
+    parsed_frame = pd.concat(
+        [boolean.rename(column) for column, boolean in parsed],
+        axis=1,
+    )
+    saw_true = parsed_frame.eq(True).fillna(False).any(axis=1)  # noqa: E712
+    saw_false = parsed_frame.eq(False).fillna(False).any(axis=1)  # noqa: E712
+    if (saw_true & saw_false).any():
+        raise ValueError(
+            "Conflicting is_starting_pitcher/GS values for a Statcast row."
+        )
+    if not values.notna().any():
+        return None
+    return values, "/".join(columns)
 
 
 # %%
-def build_outings(pitches: pd.DataFrame, player_bio: pd.DataFrame | None = None) -> pd.DataFrame:
+def build_outings(
+    pitches: pd.DataFrame,
+    player_bio: pd.DataFrame | None = None,
+    *,
+    starter_inference: str = "warn",
+) -> pd.DataFrame:
     """Aggregate Statcast pitch-level rows into pitcher-game outings."""
+    inference_mode = str(starter_inference).strip().lower()
+    if inference_mode not in {"warn", "allow", "strict"}:
+        raise ValueError("starter_inference must be one of: warn, allow, strict")
     required = {"pitcher", "game_pk", "game_date"}
     missing = required - set(pitches.columns)
     if missing:
         raise ValueError(f"Missing required pitch columns: {sorted(missing)}")
 
-    df = pitches.copy()
+    df = _derive_pitching_team(pitches)
     df["game_date"] = pd.to_datetime(df["game_date"], errors="coerce")
     keys = ["pitcher", "game_pk", "game_date"]
 
@@ -96,6 +204,7 @@ def build_outings(pitches: pd.DataFrame, player_bio: pd.DataFrame | None = None)
         "woba_value_mean": ("woba_value", "mean"),
         "pitching_team": ("pitching_team", "first"),
         "game_type": ("game_type", "first"),
+        "GS": ("GS", "max"),
     }
     existing_agg = {name: spec for name, spec in agg_spec.items() if spec[0] in df.columns}
     outings = df.groupby(keys, as_index=False).agg(**existing_agg)
@@ -107,6 +216,20 @@ def build_outings(pitches: pd.DataFrame, player_bio: pd.DataFrame | None = None)
     elif "woba_value_mean" in outings.columns:
         outings["outing_xwOBA"] = outings["woba_value_mean"]
 
+    explicit_starter = _explicit_starter_values(df)
+    explicit_starter_column: str | None = None
+    if explicit_starter is not None:
+        explicit_values, explicit_starter_column = explicit_starter
+        explicit = df[keys].copy()
+        explicit["_explicit_start"] = _numeric_boolean(explicit_values)
+        explicit = explicit.groupby(keys, as_index=False)["_explicit_start"].max()
+        outings = outings.merge(explicit, on=keys, how="left")
+        outings["is_starting_pitcher"] = (
+            outings["_explicit_start"].fillna(False).astype(int)
+        )
+        outings["starter_status_source"] = explicit_starter_column
+        outings = outings.drop(columns="_explicit_start")
+
     if "inning" in df.columns:
         inning_df = df.copy()
         inning_df["inning"] = pd.to_numeric(inning_df["inning"], errors="coerce")
@@ -115,10 +238,35 @@ def build_outings(pitches: pd.DataFrame, player_bio: pd.DataFrame | None = None)
             last_inning=("inning", "max"),
         )
         outings = outings.merge(inning_meta, on=keys, how="left")
-        first_pitchers = _first_pitcher_by_game(df)
-        outings["is_starting_pitcher"] = (
-            outings["pitcher"].eq(outings["game_pk"].map(first_pitchers))
-        ).astype(int)
+        if explicit_starter_column is None:
+            if inference_mode == "strict":
+                raise ValueError(
+                    "Starter status cannot be proven from first-observed Statcast "
+                    "rows. Supply is_starting_pitcher/GS or use "
+                    "starter_inference='warn'/'allow'."
+                )
+            if inference_mode == "warn":
+                warnings.warn(
+                    "Inferring starters from each team's first observed pitcher. "
+                    "A pitcher-filtered extract can misclassify a bulk reliever "
+                    "who enters in inning 1; reconcile with an explicit GS/status "
+                    "source when available.",
+                    StarterInferenceWarning,
+                    stacklevel=2,
+                )
+            first_pitchers = _first_pitcher_by_game(df).rename("starter").reset_index()
+            starter_pairs = first_pitchers[["game_pk", "starter"]].rename(
+                columns={"starter": "pitcher"}
+            ).drop_duplicates()
+            starter_pairs["_inferred_start"] = 1
+            outings = outings.merge(
+                starter_pairs, on=["game_pk", "pitcher"], how="left"
+            )
+            outings["is_starting_pitcher"] = (
+                outings["_inferred_start"].fillna(0).astype(int)
+            )
+            outings["starter_status_source"] = "statcast_first_inning_by_team"
+            outings = outings.drop(columns="_inferred_start")
 
     bf = df.groupby(keys).apply(_batters_faced, include_groups=False).rename("BF").reset_index()
     outings = outings.merge(bf, on=keys, how="left")
@@ -192,6 +340,15 @@ def main() -> None:
     )
     parser.add_argument("--min-pitches", type=int, default=50, help="Minimum pitches for --starter-only.")
     parser.add_argument("--regular-season-only", action="store_true", help="Keep Statcast game_type R only.")
+    parser.add_argument(
+        "--starter-inference",
+        choices=("warn", "allow", "strict"),
+        default="warn",
+        help=(
+            "Policy when no explicit is_starting_pitcher/GS is present. "
+            "'strict' refuses first-observed-pitcher inference."
+        ),
+    )
     args = parser.parse_args()
 
     pitches = _read_many(args.input_dir)
@@ -199,7 +356,7 @@ def main() -> None:
         if "game_type" not in pitches.columns:
             raise ValueError("Cannot apply --regular-season-only because game_type is missing.")
         pitches = pitches.loc[pitches["game_type"].astype("string").str.upper().eq("R")].copy()
-    outings = build_outings(pitches)
+    outings = build_outings(pitches, starter_inference=args.starter_inference)
     if args.relief_only:
         if "is_starting_pitcher" not in outings.columns:
             raise ValueError("Cannot apply --relief-only because input rows do not include inning.")

@@ -18,7 +18,7 @@ import numpy as np
 
 from lib.collect_fangraphs_stuff import collect_game_logs
 from lib.collect_pitcher_statcast import collect_pitchers, file_record
-from lib.stuff_mlb_dataset import FEATURES, build_merged_outings, make_dataset
+from lib.stuff_mlb_dataset import FEATURES, build_stuff_mlb_dataset, make_dataset
 
 
 MLB_STATS_URL = "https://statsapi.mlb.com/api/v1/stats"
@@ -181,7 +181,8 @@ def main() -> None:
 
     # Use the exact files returned by this run, rather than globbing unrelated files
     # that may coexist in a directory from an older collection.
-    merged = build_merged_outings(statcast_paths, stuff_paths)
+    merged_all = build_stuff_mlb_dataset(statcast_paths, stuff_paths)
+    merged = merged_all.loc[merged_all["target_eligible"]].copy()
     audit = collection_audit(candidates, merged, args.min_starts)
     audit_path = args.manifest_dir / "collection_audit.csv"
     audit.to_csv(audit_path, index=False, encoding="utf-8-sig")

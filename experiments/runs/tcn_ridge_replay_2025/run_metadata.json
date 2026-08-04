@@ -1,0 +1,41 @@
+{
+  "generated_at": "2026-08-04T23:06:34.316061+09:00",
+  "dataset_fingerprint": "see collection manifest",
+  "qualified_pitchers": 19,
+  "evaluation_rows": 560,
+  "common_rows": 497,
+  "ridge_alpha": 100.0,
+  "ridge_correction_scale": 0.25,
+  "tcn_config": {
+    "sequence_length": 8,
+    "internal_channels": 4,
+    "bottleneck_dim": 4,
+    "kernel_size": 2,
+    "dilations": [
+      1,
+      2,
+      4
+    ],
+    "dropout": 0.1,
+    "head_type": "H1",
+    "huber_delta": 1.0,
+    "pitcher_weight_l2": 0.01,
+    "pitcher_bias_l2": 0.01,
+    "encoder_l2": 0.0,
+    "ordinal_weight": 0.0,
+    "alpha": 0.1,
+    "learning_rate": 0.001,
+    "epochs": 250,
+    "gradient_clip": 5.0,
+    "seed": 20260722,
+    "dtype": "float32"
+  },
+  "tcn_seeds": [
+    20260722,
+    20260723,
+    20260724,
+    20260725,
+    20260726
+  ],
+  "output_dir": "experiments\\runs\\tcn_ridge_replay_2025"
+}

@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "generated_at_utc": "2026-08-04T02:00:06.670057+00:00",
+  "generated_at_utc": "2026-08-04T04:10:59.859053+00:00",
   "command": [
     "collect_mlb_stuff_dataset.py"
   ],
-  "git_commit": "7eb80cd95ebf13480c8a38dbbe74a5af752bf58c",
+  "git_commit": "6d9c177b9057f7d781e6a89ceca61f67b6a2694f",
   "python": "3.12.10",
   "packages": {
     "pandas": "2.2.3",
@@ -759,20 +759,20 @@
     "files": [
       {
         "path": "data/reproducible_mlb_stuff/fangraphs_stuff_mlb_stable_starters_2020_2025.parquet",
-        "bytes": 214490,
-        "sha256": "4102ca51c37d5a1a4b54957fd652a494f0bb6a2be3b84ff3e94518f906e212c0",
+        "bytes": 247920,
+        "sha256": "2590f0a4fc94f99d2effdd3bd4492a9583d135e3d691002ce945e43d92955ca4",
         "rows": 3284
       },
       {
         "path": "data/reproducible_mlb_stuff/fangraphs_stuff_mlb_stable_starters_2020.parquet",
-        "bytes": 20731,
-        "sha256": "7f5952db11af7c44e42af4d34c7b157c7f70cdb9b642422d942dd67d8622defc",
+        "bytes": 24724,
+        "sha256": "823dfdfceb4eac0c621f2f963dd048eacf47b16059a9a4c55575b223bbda200d",
         "rows": 198
       },
       {
         "path": "data/reproducible_mlb_stuff/fangraphs_stuff_mlb_stable_starters_2021_2025.parquet",
-        "bytes": 202322,
-        "sha256": "2aba1dd38df2a9d8eae705547f435927093b074b428e6d75e3bb8d2cb14a0111",
+        "bytes": 233866,
+        "sha256": "3115b194480afc6aaeb049cfed601ab6f19a42be5334792aa65318920e54f682",
         "rows": 3086
       }
     ],
@@ -1537,20 +1537,20 @@
       }
     ],
     "matched_50_pitch_starts_by_year": {
-      "2020": 176,
-      "2021": 512,
-      "2022": 546,
-      "2023": 583,
-      "2024": 570,
-      "2025": 560
+      "2020": 180,
+      "2021": 530,
+      "2022": 555,
+      "2023": 586,
+      "2024": 573,
+      "2025": 569
     },
     "model_ready_rows_by_year": {
-      "2020": 118,
-      "2021": 436,
-      "2022": 482,
-      "2023": 520,
-      "2024": 502,
-      "2025": 497
+      "2020": 121,
+      "2021": 451,
+      "2022": 492,
+      "2023": 526,
+      "2024": 505,
+      "2025": 505
     }
   }
 }
