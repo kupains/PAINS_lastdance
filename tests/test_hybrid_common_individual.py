@@ -46,6 +46,8 @@ def test_hybrid_fold_sequences_are_aligned_and_finite():
     assert len(data.evaluation_targets) == len(data.evaluation_common_sequence)
     assert np.isfinite(data.train_common_sequence).all()
     assert np.isfinite(data.train_individual_tabular).all()
+    assert data.common_feature_names[-1] == "common_ewma4"
+    assert data.train_common_tabular.shape[1] == len(COMMON_SEQUENCE_FEATURES) * 4 + 1
 
 
 @pytest.mark.parametrize("model", ["ridge", "xgboost"])
@@ -63,6 +65,10 @@ def test_hybrid_tabular_returns_every_evaluation_row(model):
     )
     assert len(prediction) == len(data.evaluation_targets)
     assert prediction["predicted_stuff_plus"].notna().all()
+    assert np.allclose(
+        prediction["predicted_stuff_plus"],
+        prediction["global_prediction"] + prediction["pitcher_correction"],
+    )
     assert fitted["global_model"] is not None
 
 

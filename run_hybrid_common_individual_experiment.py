@@ -1,4 +1,4 @@
-"""Select and evaluate common/individual hybrid Stuff+ models.
+"""Select and evaluate direct-Stuff+ common/individual hybrid models.
 
 Selection uses only 2022--2024 validation folds.  The selected Ridge,
 XGBoost, and TCN configurations are then evaluated once on the fixed 2025
@@ -44,10 +44,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path("experiments/runs/hybrid_common_individual_2020_2025"),
+        default=Path("experiments/runs/hybrid_direct_ewma_2020_2025"),
     )
-    parser.add_argument("--html", type=Path, default=Path("HYBRID_MODEL_REPORT.html"))
-    parser.add_argument("--markdown", type=Path, default=Path("HYBRID_MODEL_REPORT.md"))
+    parser.add_argument("--html", type=Path, default=Path("HYBRID_DIRECT_EWMA_REPORT.html"))
+    parser.add_argument("--markdown", type=Path, default=Path("HYBRID_DIRECT_EWMA_REPORT.md"))
     parser.add_argument("--device", default="cpu")
     parser.add_argument(
         "--quick", action="store_true",
@@ -77,22 +77,20 @@ def load_bundle(root: Path):
 
 def candidate_configs(quick: bool):
     ridge = [
-        HybridTabularConfig(model="ridge", global_ridge_alpha=g, individual_ridge_alpha=i,
-                            prediction_alpha=a)
-        for g, i, a in ((30, 100, .10), (100, 100, .10), (100, 300, .25), (300, 300, .25))
+        HybridTabularConfig(model="ridge", global_ridge_alpha=g, individual_ridge_alpha=i)
+        for g, i in ((30, 100), (100, 100), (100, 300), (300, 300))
     ]
     xgboost = [
         HybridTabularConfig(model="xgboost", common_n_estimators=n, common_max_depth=d,
-                            individual_n_estimators=it, individual_max_depth=1,
-                            prediction_alpha=a)
-        for n, d, it, a in ((75, 1, 15, .10), (100, 2, 20, .10),
-                            (150, 2, 25, .25), (100, 3, 20, .25))
+                            individual_n_estimators=it, individual_max_depth=1)
+        for n, d, it in ((75, 1, 15), (100, 2, 20),
+                         (150, 2, 25), (100, 3, 20))
     ]
     tcn = [
         HybridTCNConfig(internal_channels=c, bottleneck_dim=b, individual_l2=l2,
-                        prediction_alpha=a, epochs=150)
-        for c, b, l2, a in ((4, 4, .05, .10), (4, 4, .10, .25),
-                            (8, 4, .10, .10), (4, 8, .50, .25))
+                        epochs=200)
+        for c, b, l2 in ((4, 4, .05), (4, 4, .10),
+                         (8, 4, .10), (4, 8, .50))
     ]
     return (ridge[:1], xgboost[:1], tcn[:1]) if quick else (ridge, xgboost, tcn)
 
@@ -100,12 +98,12 @@ def candidate_configs(quick: bool):
 def config_id(model: str, config) -> str:
     raw = asdict(config)
     if model == "ridge":
-        return f"ridge_g{raw['global_ridge_alpha']:g}_i{raw['individual_ridge_alpha']:g}_a{raw['prediction_alpha']:g}"
+        return f"ridge_direct_ewma_g{raw['global_ridge_alpha']:g}_i{raw['individual_ridge_alpha']:g}"
     if model == "xgboost":
-        return (f"xgb_n{raw['common_n_estimators']}_d{raw['common_max_depth']}_"
-                f"in{raw['individual_n_estimators']}_a{raw['prediction_alpha']:g}")
-    return (f"tcn_c{raw['internal_channels']}_b{raw['bottleneck_dim']}_"
-            f"l2{raw['individual_l2']:g}_a{raw['prediction_alpha']:g}")
+        return (f"xgb_direct_ewma_n{raw['common_n_estimators']}_d{raw['common_max_depth']}_"
+                f"in{raw['individual_n_estimators']}")
+    return (f"tcn_direct_ewma_std_warm_c{raw['internal_channels']}_b{raw['bottleneck_dim']}_"
+            f"l2{raw['individual_l2']:g}")
 
 
 def continuous_metrics(frame: pd.DataFrame) -> dict[str, float]:
@@ -158,7 +156,7 @@ def select_winners(validation: pd.DataFrame) -> pd.DataFrame:
 
 def average_tcn_predictions(frames: list[pd.DataFrame]) -> pd.DataFrame:
     first = frames[0].copy().sort_values("row_id").reset_index(drop=True)
-    for column in ("global_residual", "pitcher_correction", "predicted_residual", "predicted_stuff_plus"):
+    for column in ("global_prediction", "global_residual", "pitcher_correction", "predicted_residual", "predicted_stuff_plus"):
         stacked = np.stack([
             frame.sort_values("row_id")[column].to_numpy(float) for frame in frames
         ])
@@ -223,7 +221,8 @@ def table_markdown(frame: pd.DataFrame, digits: int = 4) -> str:
 
 def write_report(*, markdown_path: Path, html_path: Path, metadata: dict,
                  selection: pd.DataFrame, common: pd.DataFrame, deployable: pd.DataFrame,
-                 continuous: pd.DataFrame, latest: pd.DataFrame, individual_features: list[str]) -> None:
+                 continuous: pd.DataFrame, comparison: pd.DataFrame,
+                 latest: pd.DataFrame, individual_features: list[str]) -> None:
     selected = selection.loc[selection["selected"], ["model", "candidate_id", "mean_balanced_accuracy", "selection_score"]]
     common_text = "\n".join(f"- `{feature}`" for feature in COMMON_SEQUENCE_FEATURES)
     individual_text = "\n".join(f"- `{feature}`" for feature in individual_features)
@@ -243,7 +242,7 @@ def write_report(*, markdown_path: Path, html_path: Path, metadata: dict,
 
 {common_text}
 
-Ridge와 XGBoost는 각 공통 피처의 마지막값·평균·표준편차·추세(총 52개)를 사용한다. TCN은 정규화된 8경기 시퀀스를 그대로 사용한다.
+Ridge와 XGBoost는 각 공통 피처의 마지막값·평균·표준편차·추세와 EWMA4(총 53개)를 사용한다. TCN은 정규화된 8경기 시퀀스와 별도의 학습 가능한 EWMA4 입력을 사용한다.
 
 ## 4. 선수별 피처
 
@@ -253,10 +252,18 @@ Ridge와 XGBoost는 각 공통 피처의 마지막값·평균·표준편차·추
 
 ## 5. 모델 구조
 
-- Ridge: 공통 Ridge 잔차 + 선수별 Ridge 잔차 보정
-- XGBoost: 공통 부스팅 잔차 + 선수별 소형 부스팅 잔차 보정
+- Ridge: EWMA4를 포함한 공통 Ridge 직접 예측 + 선수별 Ridge 보정
+- XGBoost: EWMA4를 포함한 공통 부스팅 직접 예측 + 선수별 소형 부스팅 보정
 - TCN: 공통 causal TCN 인코더 + 선수별 선형 보정층
-- 최종값: EWMA4 + 선택된 보정 강도 × (공통 잔차 + 선수별 보정)
+- 최종값: 학습된 공통 Stuff+ 예측 + 선수별 보정. EWMA4의 계수도 모델이 학습한다.
+
+계산식은 다음과 같다.
+
+\\[
+\\hat y_{{i,t}}=g(C_{{i,t}}, EWMA4_{{i,t}})+h_i(U_{{i,t}})
+\\]
+
+Ridge에서는 `g`와 `h_i`가 선형식이고, XGBoost에서는 트리의 합, TCN에서는 causal encoder와 학습 가능한 EWMA skip 및 선수별 선형층이다. 이전 방식의 `EWMA4 + 0.1 × 잔차`는 사용하지 않는다.
 
 ## 6. 검증 선택
 
@@ -275,6 +282,10 @@ Ridge와 XGBoost는 각 공통 피처의 마지막값·평균·표준편차·추
 ### 연속형 Stuff+ 오차
 
 {table_markdown(continuous)}
+
+### 기존 잔차 방식과 직접예측 비교
+
+{table_markdown(comparison)}
 
 ## 8. 선수별 마지막 예측
 
@@ -299,7 +310,7 @@ Statcast + FanGraphs Stuff+ + MLB 공식 기록
      Ridge  XGB   TCN      선수별 보정
        └─────┴─────┴───────┘
                     │
-     EWMA4 + alpha × (공통 + 개인)
+     공통 직접 Stuff+ 예측(EWMA 계수 학습) + 개인 보정
                     │
         연속 Stuff+ / 3단계 등급
 ```
@@ -309,16 +320,17 @@ Statcast + FanGraphs Stuff+ + MLB 공식 기록
     sections = [
         ("1. 개요", "모든 선수의 반복 패턴은 공통 branch에서, 나머지 전체 피처는 선수별 branch에서 학습했다. 2022~2024 검증으로 설정을 고른 뒤 2025를 고정 평가했다."),
         ("2. 데이터와 누수 방지", "현재 경기 입력은 사용하지 않는다. 최대 8개의 strictly-prior 등판만 사용하고 대치·정규화는 훈련 구간에서만 적합한다."),
-        ("3. 공통 피처", "<ul>" + "".join(f"<li><code>{html.escape(x)}</code></li>" for x in COMMON_SEQUENCE_FEATURES) + "</ul><p>Ridge/XGBoost: last·mean·std·slope 52개. TCN: 8경기 시퀀스.</p>"),
+        ("3. 공통 피처", "<ul>" + "".join(f"<li><code>{html.escape(x)}</code></li>" for x in COMMON_SEQUENCE_FEATURES) + "</ul><p>Ridge/XGBoost: last·mean·std·slope 52개 + EWMA4 1개. TCN: 8경기 시퀀스 + 학습 가능한 EWMA4 입력.</p>"),
         ("4. 선수별 피처", "<ul>" + "".join(f"<li><code>{html.escape(x)}</code></li>" for x in individual_features) + "</ul>"),
-        ("5. 모델", "<p>Ridge = 공통 선형 잔차 + 선수별 선형 보정<br>XGBoost = 공통 트리 잔차 + 선수별 소형 트리 보정<br>TCN = 공통 causal encoder + 선수별 선형 보정</p>"),
+        ("5. 모델과 계산식", "<p>세 모델 모두 Stuff+를 직접 예측한다. EWMA4는 고정 기준값이 아니라 계수를 학습하는 공통 피처다.</p><div class='arch'>ŷᵢₜ = g(Cᵢₜ, EWMA4ᵢₜ) + hᵢ(Uᵢₜ)</div><p>Ridge = 공통 선형 직접 예측 + 선수별 선형 보정<br>XGBoost = 공통 트리 직접 예측 + 선수별 소형 트리 보정<br>TCN = 공통 causal encoder + 학습 가능한 EWMA skip + 선수별 선형 보정<br>이전 식 EWMA4 + 0.1 × 잔차는 사용하지 않는다.</p>"),
         ("6. 2022~2024 모델 선택", table_html(selected)),
         ("7. 2025 공통 표본 결과", table_html(common)),
         ("8. 2025 예측 가능 표본", table_html(deployable)),
         ("9. 연속형 결과", table_html(continuous)),
-        ("10. 선수별 마지막 예측", table_html(latest, 2)),
-        ("11. 해석·결론", "공통 효과와 선수별 반응을 분리했다. Ridge 전체 계수는 CSV로 함께 저장했다. 최종 비교는 공통 표본 balanced accuracy와 연속 MAE를 같이 해석한다."),
-        ("12. 아키텍처와 파이프라인", "<div class='arch'>Statcast + FanGraphs + MLB 공식 기록\n          ↓\n경기 집계 / strictly-prior lag / train-only 정규화\n          ↓\n공통 13개 ── Ridge · XGBoost · causal TCN\n나머지 전체 ── 선수별 Ridge · XGBoost · 선형 보정\n          ↓\nEWMA4 + alpha × (공통 잔차 + 선수별 보정)\n          ↓\n연속 Stuff+ + 3단계 등급</div>"),
+        ("10. 기존 방식과 비교", table_html(comparison)),
+        ("11. 선수별 마지막 예측", table_html(latest, 2)),
+        ("12. 해석·결론", "직접예측은 모델 간 차이를 실제 예측값에 반영했고 XGBoost와 TCN의 연속 MAE를 개선했다. 반면 3등급 balanced accuracy는 하락했다. 따라서 연속 Stuff+가 목표면 직접예측 XGBoost, 등급 안정성이 목표면 기존 잔차 방식이 유리하다. Ridge 전체 계수는 CSV로 저장했다."),
+        ("13. 아키텍처와 파이프라인", "<div class='arch'>Statcast + FanGraphs + MLB 공식 기록\n          ↓\n경기 집계 / strictly-prior lag / train-only 정규화\n          ↓\n공통 13개 + EWMA4 ── Ridge · XGBoost · causal TCN\n나머지 전체 ───────── 선수별 Ridge · XGBoost · 선형 보정\n          ↓\n공통 직접 Stuff+ 예측 + 선수별 보정\n          ↓\n연속 Stuff+ + 3단계 등급</div>"),
     ]
     body = "".join(f"<section><h2>{title}</h2>{content}</section>" for title, content in sections)
     html_path.write_text(f"<!doctype html><html lang='ko'><head><meta charset='utf-8'><title>Hybrid Stuff+ Report</title><style>{css}</style></head><body><h1>공통·선수별 하이브리드 Stuff+ 예측</h1><p>{metadata['generated_at']}</p>{body}</body></html>", encoding="utf-8")
@@ -401,6 +413,26 @@ def main() -> None:
     continuous = pd.DataFrame([
         {"model": model, **continuous_metrics(frame)} for model, frame in predictions.items()
     ])
+    direct_comparison = common[["model", "accuracy", "balanced_accuracy"]].merge(
+        continuous[["model", "mae", "rmse"]], on="model", how="left"
+    ).assign(approach="direct_stuff_plus_with_ewma_feature")
+    prior_dir = Path("experiments/runs/hybrid_common_individual_2020_2025")
+    prior_common_path = prior_dir / "metrics_common.csv"
+    prior_continuous_path = prior_dir / "metrics_continuous.csv"
+    if prior_common_path.exists() and prior_continuous_path.exists():
+        prior_common = pd.read_csv(prior_common_path)
+        prior_continuous = pd.read_csv(prior_continuous_path)
+        prior_comparison = prior_common[["model", "accuracy", "balanced_accuracy"]].merge(
+            prior_continuous[["model", "mae", "rmse"]], on="model", how="left"
+        ).assign(approach="ewma_plus_0.1_residual")
+        comparison = pd.concat(
+            [prior_comparison, direct_comparison], ignore_index=True, sort=False
+        )
+    else:
+        comparison = direct_comparison
+    comparison = comparison[
+        ["approach", "model", "accuracy", "balanced_accuracy", "mae", "rmse"]
+    ]
     names = {str(key): value for key, value in bundle.pitcher_names.items()}
     latest = latest_player_predictions(predictions, names)
     coefficients = ridge_coefficients(ridge_models, final_data)
@@ -430,6 +462,7 @@ def main() -> None:
     common.to_csv(args.output_dir / "metrics_common.csv", index=False)
     deployable.to_csv(args.output_dir / "metrics_deployable.csv", index=False)
     continuous.to_csv(args.output_dir / "metrics_continuous.csv", index=False)
+    comparison.to_csv(args.output_dir / "comparison_with_residual.csv", index=False)
     latest.to_csv(args.output_dir / "latest_player_predictions.csv", index=False)
     coefficients.to_csv(args.output_dir / "hybrid_ridge_coefficients.csv", index=False)
     all_predictions.to_parquet(args.output_dir / "predictions_2025.parquet", index=False)
@@ -442,7 +475,7 @@ def main() -> None:
     write_report(
         markdown_path=args.markdown, html_path=args.html, metadata=metadata,
         selection=selection, common=common, deployable=deployable,
-        continuous=continuous, latest=latest,
+        continuous=continuous, comparison=comparison, latest=latest,
         individual_features=(list(final_data.individual_raw_feature_names)
                              + list(final_data.individual_derived_feature_names)),
     )

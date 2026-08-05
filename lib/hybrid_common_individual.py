@@ -1,9 +1,10 @@
-"""Common/individual hybrid Ridge, XGBoost, and TCN experiments.
+"""Direct-Stuff+ common/individual hybrid Ridge, XGBoost, and TCN experiments.
 
 The common branch uses the user-selected 13 prior-outing signals and learns
 one population model.  Every other usable, prior-known signal is routed to a
-small pitcher-specific correction branch.  Target-outing physical values are
-never used; raw physical inputs are assembled only from strictly prior games.
+small pitcher-specific correction branch. EWMA4 is a learned common input,
+not a fixed baseline. Target-outing physical values are never used; raw
+physical inputs are assembled only from strictly prior games.
 """
 
 from __future__ import annotations
@@ -130,7 +131,6 @@ class HybridTabularConfig:
     reg_alpha: float = 0.5
     subsample: float = 0.8
     colsample_bytree: float = 0.8
-    prediction_alpha: float = 0.25
     seed: int = 20260722
 
 
@@ -148,7 +148,6 @@ class HybridTCNConfig:
     learning_rate: float = 1e-3
     epochs: int = 200
     gradient_clip: float = 5.0
-    prediction_alpha: float = 0.1
     seed: int = 20260722
 
 
@@ -166,6 +165,10 @@ class HybridFoldData:
     evaluation_stuff_available: np.ndarray
     train_common_tabular: np.ndarray
     evaluation_common_tabular: np.ndarray
+    train_ewma_feature: np.ndarray
+    evaluation_ewma_feature: np.ndarray
+    target_mean: float
+    target_scale: float
     train_individual_tabular: np.ndarray
     evaluation_individual_tabular: np.ndarray
     train_pitcher_index: np.ndarray
@@ -336,6 +339,31 @@ def prepare_hybrid_fold_data(
     evaluation_common_tabular = sequence_summary(
         evaluation_common_sequence, evaluation_batch.valid_timestep
     )
+    train_ewma_raw = pd.to_numeric(train_targets["ewma4"], errors="coerce").to_numpy(float)
+    evaluation_ewma_raw = pd.to_numeric(
+        evaluation_targets["ewma4"], errors="coerce"
+    ).to_numpy(float)
+    ewma_mean = float(np.nanmean(train_ewma_raw))
+    ewma_scale = float(np.nanstd(train_ewma_raw))
+    if not np.isfinite(ewma_scale) or ewma_scale <= 1e-8:
+        ewma_scale = 1.0
+    train_ewma_feature = ((train_ewma_raw - ewma_mean) / ewma_scale).astype(np.float32)
+    evaluation_ewma_feature = (
+        (evaluation_ewma_raw - ewma_mean) / ewma_scale
+    ).astype(np.float32)
+    train_target_raw = pd.to_numeric(
+        train_targets["stuff_plus"], errors="coerce"
+    ).to_numpy(float)
+    target_mean = float(np.nanmean(train_target_raw))
+    target_scale = float(np.nanstd(train_target_raw))
+    if not np.isfinite(target_scale) or target_scale <= 1e-8:
+        target_scale = 1.0
+    train_common_tabular = np.concatenate(
+        [train_common_tabular, train_ewma_feature[:, None]], axis=1
+    )
+    evaluation_common_tabular = np.concatenate(
+        [evaluation_common_tabular, evaluation_ewma_feature[:, None]], axis=1
+    )
     train_individual_sequence_summary = sequence_summary(
         train_individual_sequence, train_batch.valid_timestep
     )
@@ -384,12 +412,19 @@ def prepare_hybrid_fold_data(
         evaluation_stuff_available=evaluation_batch.stuff_plus_available,
         train_common_tabular=train_common_tabular,
         evaluation_common_tabular=evaluation_common_tabular,
+        train_ewma_feature=train_ewma_feature,
+        evaluation_ewma_feature=evaluation_ewma_feature,
+        target_mean=target_mean,
+        target_scale=target_scale,
         train_individual_tabular=train_individual_tabular,
         evaluation_individual_tabular=evaluation_individual_tabular,
         train_pitcher_index=train_pitcher_index,
         evaluation_pitcher_index=evaluation_pitcher_index,
         pitcher_mapping=pitcher_mapping,
-        common_feature_names=_summary_names(COMMON_SEQUENCE_FEATURES, "common"),
+        common_feature_names=(
+            *_summary_names(COMMON_SEQUENCE_FEATURES, "common"),
+            "common_ewma4",
+        ),
         individual_raw_feature_names=individual_raw,
         individual_derived_feature_names=individual_derived,
         individual_tabular_feature_names=tuple(individual_names),
@@ -437,12 +472,11 @@ def _new_tabular_estimator(config: HybridTabularConfig, *, individual: bool):
 
 def _prediction_frame(
     targets: pd.DataFrame,
-    predicted_residual: np.ndarray,
+    predicted_stuff_plus: np.ndarray,
     *,
-    alpha: float,
     model: str,
     candidate_id: str,
-    global_residual: np.ndarray,
+    global_prediction: np.ndarray,
     individual_correction: np.ndarray,
 ) -> pd.DataFrame:
     keep = [
@@ -455,12 +489,15 @@ def _prediction_frame(
     result["true_residual"] = result["true_stuff_plus"] - pd.to_numeric(
         result["ewma4"], errors="coerce"
     )
-    result["global_residual"] = np.asarray(global_residual, dtype=float)
+    result["global_prediction"] = np.asarray(global_prediction, dtype=float)
+    result["global_residual"] = result["global_prediction"] - pd.to_numeric(
+        result["ewma4"], errors="coerce"
+    )
     result["pitcher_correction"] = np.asarray(individual_correction, dtype=float)
-    result["predicted_residual"] = np.asarray(predicted_residual, dtype=float)
-    result["predicted_stuff_plus"] = (
-        pd.to_numeric(result["ewma4"], errors="coerce")
-        + float(alpha) * result["predicted_residual"]
+    result["predicted_stuff_plus"] = np.asarray(predicted_stuff_plus, dtype=float)
+    result["predicted_residual"] = (
+        result["predicted_stuff_plus"]
+        - pd.to_numeric(result["ewma4"], errors="coerce")
     )
     result["predicted_class"] = classify_stuff_plus_rows(
         result["predicted_stuff_plus"], result["q33"], result["q67"]
@@ -477,9 +514,8 @@ def predict_hybrid_tabular(
     config: HybridTabularConfig | Mapping[str, Any] | None = None,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
     cfg = config if isinstance(config, HybridTabularConfig) else HybridTabularConfig(**dict(config or {}))
-    y = (
-        pd.to_numeric(fold_data.train_targets["stuff_plus"], errors="coerce")
-        - pd.to_numeric(fold_data.train_targets["ewma4"], errors="coerce")
+    y = pd.to_numeric(
+        fold_data.train_targets["stuff_plus"], errors="coerce"
     ).to_numpy(dtype=float)
     global_model = _new_tabular_estimator(cfg, individual=False)
     global_model.fit(
@@ -507,17 +543,16 @@ def predict_hybrid_tabular(
         individual_models[int(pitcher_index)] = model
     total = global_eval + individual_eval
     candidate = (
-        f"hybrid_{cfg.model}_l{cfg.sequence_length}_a{cfg.prediction_alpha:g}_"
+        f"hybrid_{cfg.model}_direct_ewma_l{cfg.sequence_length}_"
         f"common{fold_data.train_common_tabular.shape[1]}_"
         f"individual{fold_data.train_individual_tabular.shape[1]}"
     )
     prediction = _prediction_frame(
         fold_data.evaluation_targets,
         total,
-        alpha=cfg.prediction_alpha,
-        model=f"hybrid_{cfg.model}",
+        model=f"hybrid_{cfg.model}_direct_ewma",
         candidate_id=candidate,
-        global_residual=global_eval,
+        global_prediction=global_eval,
         individual_correction=individual_eval,
     )
     return prediction, {"global_model": global_model, "individual_models": individual_models}
@@ -540,8 +575,12 @@ if torch is not None:
                 dropout=config.dropout,
             )
             self.global_head = nn.Linear(config.bottleneck_dim, 1)
+            self.ewma_head = nn.Linear(1, 1, bias=False)
             self.individual_weight = nn.Embedding(num_pitchers, individual_dim)
             self.pitcher_bias = nn.Embedding(num_pitchers, 1)
+            nn.init.zeros_(self.global_head.weight)
+            nn.init.zeros_(self.global_head.bias)
+            nn.init.ones_(self.ewma_head.weight)
             nn.init.zeros_(self.individual_weight.weight)
             nn.init.zeros_(self.pitcher_bias.weight)
 
@@ -553,15 +592,19 @@ if torch is not None:
             pitcher_index,
             primary_available,
             stuff_available,
+            ewma_feature,
         ):
             availability = torch.stack([primary_available, stuff_available], dim=-1)
             representation = self.encoder(common_values, valid, availability=availability)
-            global_residual = self.global_head(representation).squeeze(1)
+            global_prediction = (
+                self.global_head(representation)
+                + self.ewma_head(ewma_feature.unsqueeze(1))
+            ).squeeze(1)
             individual = (
                 self.individual_weight(pitcher_index) * individual_values
             ).sum(1)
             individual = individual + self.pitcher_bias(pitcher_index).squeeze(1)
-            return global_residual, individual, global_residual + individual
+            return global_prediction, individual, global_prediction + individual
 
 
 def _tensor(values: np.ndarray, *, dtype=None, device="cpu"):
@@ -590,11 +633,16 @@ def fit_predict_hybrid_tcn(
     train_stuff = _tensor(
         fold_data.train_stuff_available, dtype=torch.bool, device=device
     )
-    true_residual = _tensor(
+    train_ewma = _tensor(
+        fold_data.train_ewma_feature, dtype=torch.float32, device=device
+    )
+    true_stuff_plus_standardized = _tensor(
         (
-            pd.to_numeric(fold_data.train_targets["stuff_plus"], errors="coerce")
-            - pd.to_numeric(fold_data.train_targets["ewma4"], errors="coerce")
-        ).to_numpy(dtype=np.float32),
+            pd.to_numeric(
+            fold_data.train_targets["stuff_plus"], errors="coerce"
+            ).to_numpy(dtype=np.float32)
+            - fold_data.target_mean
+        ) / fold_data.target_scale,
         dtype=torch.float32,
         device=device,
     )
@@ -608,16 +656,18 @@ def fit_predict_hybrid_tcn(
     for epoch in range(cfg.epochs):
         model.train()
         optimizer.zero_grad(set_to_none=True)
-        global_residual, individual, predicted = model(
+        global_prediction, individual, predicted = model(
             train_common,
             train_individual,
             train_valid,
             train_pitcher,
             train_primary,
             train_stuff,
+            train_ewma,
         )
         row_loss = F.huber_loss(
-            predicted, true_residual, reduction="none", delta=cfg.huber_delta
+            predicted, true_stuff_plus_standardized,
+            reduction="none", delta=cfg.huber_delta
         )
         residual_loss = pitcher_balanced_mean(row_loss, train_pitcher)
         individual_penalty = cfg.individual_l2 * model.individual_weight.weight.square().sum()
@@ -649,30 +699,39 @@ def fit_predict_hybrid_tcn(
     eval_stuff = _tensor(
         fold_data.evaluation_stuff_available, dtype=torch.bool, device=device
     )
+    eval_ewma = _tensor(
+        fold_data.evaluation_ewma_feature, dtype=torch.float32, device=device
+    )
     model.eval()
     with torch.no_grad():
-        global_residual, individual, predicted = model(
+        global_prediction, individual, predicted = model(
             eval_common,
             eval_individual,
             eval_valid,
             eval_pitcher,
             eval_primary,
             eval_stuff,
+            eval_ewma,
         )
-    global_np = global_residual.cpu().numpy()
-    individual_np = individual.cpu().numpy()
+    global_np = (
+        fold_data.target_mean
+        + fold_data.target_scale * global_prediction.cpu().numpy()
+    )
+    individual_np = fold_data.target_scale * individual.cpu().numpy()
+    predicted_np = (
+        fold_data.target_mean + fold_data.target_scale * predicted.cpu().numpy()
+    )
     candidate = (
-        f"hybrid_tcn_l{cfg.sequence_length}_c{cfg.internal_channels}_b"
-        f"{cfg.bottleneck_dim}_l2{cfg.individual_l2:g}_a{cfg.prediction_alpha:g}_"
+        f"hybrid_tcn_direct_ewma_standardized_l{cfg.sequence_length}_c{cfg.internal_channels}_b"
+        f"{cfg.bottleneck_dim}_l2{cfg.individual_l2:g}_"
         f"individual{fold_data.train_individual_tabular.shape[1]}"
     )
     prediction = _prediction_frame(
         fold_data.evaluation_targets,
-        predicted.cpu().numpy(),
-        alpha=cfg.prediction_alpha,
-        model="hybrid_tcn",
+        predicted_np,
+        model="hybrid_tcn_direct_ewma",
         candidate_id=candidate,
-        global_residual=global_np,
+        global_prediction=global_np,
         individual_correction=individual_np,
     )
     return prediction, model, pd.DataFrame(history)
