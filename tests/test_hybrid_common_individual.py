@@ -8,6 +8,7 @@ from lib.hybrid_common_individual import (
     INDIVIDUAL_RAW_CANDIDATES,
     HybridTabularConfig,
     HybridTCNConfig,
+    ZSCORE_CLASS_BOUNDARY,
     fit_predict_hybrid_tcn,
     predict_hybrid_tabular,
     prepare_hybrid_fold_data,
@@ -70,6 +71,12 @@ def test_hybrid_tabular_returns_every_evaluation_row(model):
         prediction["global_prediction"] + prediction["pitcher_correction"],
     )
     assert fitted["global_model"] is not None
+    expected_class = np.where(
+        prediction["predicted_z"] < -ZSCORE_CLASS_BOUNDARY,
+        0,
+        np.where(prediction["predicted_z"] > ZSCORE_CLASS_BOUNDARY, 2, 1),
+    )
+    assert np.array_equal(prediction["predicted_class"], expected_class)
 
 
 @pytest.mark.skipif(not torch_available(), reason="PyTorch is not installed")

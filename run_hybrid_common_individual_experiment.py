@@ -20,6 +20,7 @@ import pandas as pd
 from lib.evaluation import evaluate_common_and_deployable, evaluate_prediction_frame
 from lib.hybrid_common_individual import (
     COMMON_SEQUENCE_FEATURES,
+    ZSCORE_CLASS_BOUNDARY,
     HybridTCNConfig,
     HybridTabularConfig,
     fit_predict_hybrid_tcn,
@@ -44,10 +45,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path("experiments/runs/hybrid_direct_ewma_2020_2025"),
+        default=Path("experiments/runs/hybrid_player_zscore_2020_2025"),
     )
-    parser.add_argument("--html", type=Path, default=Path("HYBRID_DIRECT_EWMA_REPORT.html"))
-    parser.add_argument("--markdown", type=Path, default=Path("HYBRID_DIRECT_EWMA_REPORT.md"))
+    parser.add_argument("--html", type=Path, default=Path("HYBRID_PLAYER_ZSCORE_REPORT.html"))
+    parser.add_argument("--markdown", type=Path, default=Path("HYBRID_PLAYER_ZSCORE_REPORT.md"))
     parser.add_argument("--device", default="cpu")
     parser.add_argument(
         "--quick", action="store_true",
@@ -98,11 +99,11 @@ def candidate_configs(quick: bool):
 def config_id(model: str, config) -> str:
     raw = asdict(config)
     if model == "ridge":
-        return f"ridge_direct_ewma_g{raw['global_ridge_alpha']:g}_i{raw['individual_ridge_alpha']:g}"
+        return f"ridge_player_z_g{raw['global_ridge_alpha']:g}_i{raw['individual_ridge_alpha']:g}"
     if model == "xgboost":
-        return (f"xgb_direct_ewma_n{raw['common_n_estimators']}_d{raw['common_max_depth']}_"
+        return (f"xgb_player_z_n{raw['common_n_estimators']}_d{raw['common_max_depth']}_"
                 f"in{raw['individual_n_estimators']}")
-    return (f"tcn_direct_ewma_std_warm_c{raw['internal_channels']}_b{raw['bottleneck_dim']}_"
+    return (f"tcn_player_z_c{raw['internal_channels']}_b{raw['bottleneck_dim']}_"
             f"l2{raw['individual_l2']:g}")
 
 
@@ -111,11 +112,55 @@ def continuous_metrics(frame: pd.DataFrame) -> dict[str, float]:
     predicted = pd.to_numeric(frame["predicted_stuff_plus"], errors="coerce")
     valid = actual.notna() & predicted.notna()
     error = predicted.loc[valid] - actual.loc[valid]
-    return {
+    metrics = {
         "mae": float(error.abs().mean()),
         "rmse": float(np.sqrt(np.square(error).mean())),
         "continuous_n": int(valid.sum()),
     }
+    if {"true_z", "predicted_z"}.issubset(frame.columns):
+        true_z = pd.to_numeric(frame["true_z"], errors="coerce")
+        predicted_z = pd.to_numeric(frame["predicted_z"], errors="coerce")
+        z_valid = true_z.notna() & predicted_z.notna()
+        z_error = predicted_z.loc[z_valid] - true_z.loc[z_valid]
+        metrics.update({
+            "z_mae": float(z_error.abs().mean()),
+            "z_rmse": float(np.sqrt(np.square(z_error).mean())),
+            "z_correlation": float(predicted_z.loc[z_valid].corr(true_z.loc[z_valid])),
+        })
+    return metrics
+
+
+def reclassify_player_z(frame: pd.DataFrame, fold_data) -> pd.DataFrame:
+    """Apply training-only player z-score labels to an arbitrary prediction frame."""
+
+    result = frame.copy().reset_index(drop=True)
+    stat_frame = pd.DataFrame({
+        "row_id": fold_data.evaluation_targets["row_id"].astype(str),
+        "player_train_mean": fold_data.evaluation_target_mean,
+        "player_train_std": fold_data.evaluation_target_scale,
+    }).set_index("row_id")
+    keys = result["row_id"].astype(str)
+    result["player_train_mean"] = keys.map(stat_frame["player_train_mean"])
+    result["player_train_std"] = keys.map(stat_frame["player_train_std"])
+    result["true_stuff_plus"] = pd.to_numeric(
+        result.get("true_stuff_plus", result["stuff_plus"]), errors="coerce"
+    )
+    result["true_z"] = (
+        result["true_stuff_plus"] - result["player_train_mean"]
+    ) / result["player_train_std"]
+    result["predicted_z"] = (
+        pd.to_numeric(result["predicted_stuff_plus"], errors="coerce")
+        - result["player_train_mean"]
+    ) / result["player_train_std"]
+    result["true_class"] = np.select(
+        [result["true_z"] < -ZSCORE_CLASS_BOUNDARY,
+         result["true_z"] > ZSCORE_CLASS_BOUNDARY], [0, 2], default=1,
+    ).astype(int)
+    result["predicted_class"] = np.select(
+        [result["predicted_z"] < -ZSCORE_CLASS_BOUNDARY,
+         result["predicted_z"] > ZSCORE_CLASS_BOUNDARY], [0, 2], default=1,
+    ).astype(int)
+    return result
 
 
 def score_row(model: str, config, year: int, prediction: pd.DataFrame) -> dict:
@@ -156,15 +201,15 @@ def select_winners(validation: pd.DataFrame) -> pd.DataFrame:
 
 def average_tcn_predictions(frames: list[pd.DataFrame]) -> pd.DataFrame:
     first = frames[0].copy().sort_values("row_id").reset_index(drop=True)
-    for column in ("global_prediction", "global_residual", "pitcher_correction", "predicted_residual", "predicted_stuff_plus"):
+    for column in ("global_z", "pitcher_z_correction", "predicted_z", "global_prediction", "global_residual", "pitcher_correction", "predicted_residual", "predicted_stuff_plus"):
         stacked = np.stack([
             frame.sort_values("row_id")[column].to_numpy(float) for frame in frames
         ])
         first[column] = stacked.mean(axis=0)
-    from lib.stuff_tabular import classify_stuff_plus_rows
-    first["predicted_class"] = classify_stuff_plus_rows(
-        first["predicted_stuff_plus"], first["q33"], first["q67"]
-    )
+    first["predicted_class"] = np.select(
+        [first["predicted_z"] < -ZSCORE_CLASS_BOUNDARY,
+         first["predicted_z"] > ZSCORE_CLASS_BOUNDARY], [0, 2], default=1,
+    ).astype(int)
     first["candidate_id"] = first["candidate_id"].astype(str) + "_5seed_mean"
     return first
 
@@ -194,6 +239,8 @@ def latest_player_predictions(predictions: dict[str, pd.DataFrame], names: dict[
     for model, frame in predictions.items():
         lookup = frame.set_index("row_id")
         result[f"{model}_prediction"] = result["row_id"].map(lookup["predicted_stuff_plus"])
+        if "predicted_z" in lookup:
+            result[f"{model}_z"] = result["row_id"].map(lookup["predicted_z"])
         result[f"{model}_class"] = result["row_id"].map(lookup["predicted_class"])
     return result.sort_values("pitcher_name").reset_index(drop=True)
 
@@ -242,7 +289,7 @@ def write_report(*, markdown_path: Path, html_path: Path, metadata: dict,
 
 {common_text}
 
-Ridge와 XGBoost는 각 공통 피처의 마지막값·평균·표준편차·추세와 EWMA4(총 53개)를 사용한다. TCN은 정규화된 8경기 시퀀스와 별도의 학습 가능한 EWMA4 입력을 사용한다.
+Ridge와 XGBoost는 각 공통 피처의 마지막값·평균·표준편차·추세와 선수 기준 EWMA z-score(총 53개)를 사용한다. TCN은 정규화된 8경기 시퀀스와 별도의 학습 가능한 EWMA z-score 입력을 사용한다.
 
 ## 4. 선수별 피처
 
@@ -252,18 +299,20 @@ Ridge와 XGBoost는 각 공통 피처의 마지막값·평균·표준편차·추
 
 ## 5. 모델 구조
 
-- Ridge: EWMA4를 포함한 공통 Ridge 직접 예측 + 선수별 Ridge 보정
-- XGBoost: EWMA4를 포함한 공통 부스팅 직접 예측 + 선수별 소형 부스팅 보정
+- Ridge: 공통 player-z Ridge 예측 + 선수별 Ridge 보정
+- XGBoost: 공통 player-z 부스팅 예측 + 선수별 소형 부스팅 보정
 - TCN: 공통 causal TCN 인코더 + 선수별 선형 보정층
-- 최종값: 학습된 공통 Stuff+ 예측 + 선수별 보정. EWMA4의 계수도 모델이 학습한다.
+- 연속 목표: 선수 훈련 평균 대비 Stuff+ 표준점수
 
 계산식은 다음과 같다.
 
 \\[
-\\hat y_{{i,t}}=g(C_{{i,t}}, EWMA4_{{i,t}})+h_i(U_{{i,t}})
+z_{{i,t}}=(y_{{i,t}}-\\mu_i)/\\sigma_i,\\quad
+\\hat z_{{i,t}}=g(C_{{i,t}}, EWMAz_{{i,t}})+h_i(U_{{i,t}}),\\quad
+\\hat y_{{i,t}}=\\mu_i+\\sigma_i\\hat z_{{i,t}}
 \\]
 
-Ridge에서는 `g`와 `h_i`가 선형식이고, XGBoost에서는 트리의 합, TCN에서는 causal encoder와 학습 가능한 EWMA skip 및 선수별 선형층이다. 이전 방식의 `EWMA4 + 0.1 × 잔차`는 사용하지 않는다.
+등급은 `Low: z < -0.5`, `Middle: -0.5 ≤ z ≤ 0.5`, `High: z > 0.5`다. Ridge에서는 `g`와 `h_i`가 선형식이고, XGBoost에서는 트리의 합, TCN에서는 causal encoder와 학습 가능한 EWMA-z skip 및 선수별 선형층이다.
 
 ## 6. 검증 선택
 
@@ -293,7 +342,7 @@ Ridge에서는 `g`와 `h_i`가 선형식이고, XGBoost에서는 트리의 합, 
 
 ## 9. 해석과 결론
 
-공통 branch는 선수 간 반복되는 변화 패턴을 모으고, 선수별 branch는 같은 변화라도 선수마다 다른 반응을 보정한다. Ridge 계수 전체는 별도 CSV로 남겨 공통 효과와 선수별 효과를 분리해 확인할 수 있게 했다. 성능 판단은 2025 공통 표본의 balanced accuracy와 연속형 MAE를 함께 본다.
+선수별 z-score는 등급 정의와 결과 표현에는 적합하지만, z 자체를 학습 목표로 둔 모델은 Middle로 수축해 기존 잔차 모델보다 낮았다. 따라서 최종 권장안은 기존 잔차 모델의 연속 Stuff+ 예측을 유지하고, 출력 단계에서 `predicted_z=(predicted Stuff+−선수 훈련평균)/선수 훈련표준편차`를 함께 제공하며 ±0.5σ로 등급을 파생하는 방식이다.
 
 ## 10. 아키텍처와 파이프라인
 
@@ -310,9 +359,9 @@ Statcast + FanGraphs Stuff+ + MLB 공식 기록
      Ridge  XGB   TCN      선수별 보정
        └─────┴─────┴───────┘
                     │
-     공통 직접 Stuff+ 예측(EWMA 계수 학습) + 개인 보정
+     공통 player-z 예측(EWMA-z 계수 학습) + 개인 보정
                     │
-        연속 Stuff+ / 3단계 등급
+        연속 z 및 Stuff+ 복원 / ±0.5σ 3단계 등급
 ```
 """
     markdown_path.write_text(markdown, encoding="utf-8")
@@ -320,17 +369,17 @@ Statcast + FanGraphs Stuff+ + MLB 공식 기록
     sections = [
         ("1. 개요", "모든 선수의 반복 패턴은 공통 branch에서, 나머지 전체 피처는 선수별 branch에서 학습했다. 2022~2024 검증으로 설정을 고른 뒤 2025를 고정 평가했다."),
         ("2. 데이터와 누수 방지", "현재 경기 입력은 사용하지 않는다. 최대 8개의 strictly-prior 등판만 사용하고 대치·정규화는 훈련 구간에서만 적합한다."),
-        ("3. 공통 피처", "<ul>" + "".join(f"<li><code>{html.escape(x)}</code></li>" for x in COMMON_SEQUENCE_FEATURES) + "</ul><p>Ridge/XGBoost: last·mean·std·slope 52개 + EWMA4 1개. TCN: 8경기 시퀀스 + 학습 가능한 EWMA4 입력.</p>"),
+        ("3. 공통 피처", "<ul>" + "".join(f"<li><code>{html.escape(x)}</code></li>" for x in COMMON_SEQUENCE_FEATURES) + "</ul><p>Ridge/XGBoost: last·mean·std·slope 52개 + EWMA-z 1개. TCN: 8경기 시퀀스 + 학습 가능한 EWMA-z 입력.</p>"),
         ("4. 선수별 피처", "<ul>" + "".join(f"<li><code>{html.escape(x)}</code></li>" for x in individual_features) + "</ul>"),
-        ("5. 모델과 계산식", "<p>세 모델 모두 Stuff+를 직접 예측한다. EWMA4는 고정 기준값이 아니라 계수를 학습하는 공통 피처다.</p><div class='arch'>ŷᵢₜ = g(Cᵢₜ, EWMA4ᵢₜ) + hᵢ(Uᵢₜ)</div><p>Ridge = 공통 선형 직접 예측 + 선수별 선형 보정<br>XGBoost = 공통 트리 직접 예측 + 선수별 소형 트리 보정<br>TCN = 공통 causal encoder + 학습 가능한 EWMA skip + 선수별 선형 보정<br>이전 식 EWMA4 + 0.1 × 잔차는 사용하지 않는다.</p>"),
+        ("5. 모델과 계산식", "<p>선수 본인의 훈련 평균과 표준편차로 Stuff+를 연속 표준화한다. EWMA도 같은 기준의 z-score 공통 피처로 넣는다.</p><div class='arch'>zᵢₜ = (yᵢₜ − μᵢ) / σᵢ\nẑᵢₜ = g(Cᵢₜ, EWMA-zᵢₜ) + hᵢ(Uᵢₜ)\nŷᵢₜ = μᵢ + σᵢ × ẑᵢₜ\nLow &lt; −0.5σ / Middle −0.5~0.5σ / High &gt; 0.5σ</div><p>Ridge = 공통 선형 z 예측 + 선수별 선형 보정<br>XGBoost = 공통 트리 z 예측 + 선수별 소형 트리 보정<br>TCN = 공통 causal encoder + 학습 가능한 EWMA-z skip + 선수별 선형 보정</p>"),
         ("6. 2022~2024 모델 선택", table_html(selected)),
         ("7. 2025 공통 표본 결과", table_html(common)),
         ("8. 2025 예측 가능 표본", table_html(deployable)),
         ("9. 연속형 결과", table_html(continuous)),
         ("10. 기존 방식과 비교", table_html(comparison)),
         ("11. 선수별 마지막 예측", table_html(latest, 2)),
-        ("12. 해석·결론", "직접예측은 모델 간 차이를 실제 예측값에 반영했고 XGBoost와 TCN의 연속 MAE를 개선했다. 반면 3등급 balanced accuracy는 하락했다. 따라서 연속 Stuff+가 목표면 직접예측 XGBoost, 등급 안정성이 목표면 기존 잔차 방식이 유리하다. Ridge 전체 계수는 CSV로 저장했다."),
-        ("13. 아키텍처와 파이프라인", "<div class='arch'>Statcast + FanGraphs + MLB 공식 기록\n          ↓\n경기 집계 / strictly-prior lag / train-only 정규화\n          ↓\n공통 13개 + EWMA4 ── Ridge · XGBoost · causal TCN\n나머지 전체 ───────── 선수별 Ridge · XGBoost · 선형 보정\n          ↓\n공통 직접 Stuff+ 예측 + 선수별 보정\n          ↓\n연속 Stuff+ + 3단계 등급</div>"),
+        ("12. 해석·결론", "z-score는 등급 정의와 결과 표현에는 적합하지만 z 자체를 학습 목표로 둔 모델은 Middle로 수축해 기존 잔차 모델보다 낮았다. 최종 권장안은 기존 잔차 모델의 Stuff+ 예측을 유지하고 출력 단계에서 predicted z를 함께 제공하며 ±0.5σ로 등급을 파생하는 것이다."),
+        ("13. 아키텍처와 파이프라인", "<div class='arch'>Statcast + FanGraphs + MLB 공식 기록\n          ↓\n경기 집계 / strictly-prior lag / train-only 선수 통계\n          ↓\n공통 13개 + EWMA-z ── Ridge · XGBoost · causal TCN\n나머지 전체 ───────── 선수별 Ridge · XGBoost · 선형 보정\n          ↓\nplayer-z 예측 → μᵢ + σᵢ × z 로 Stuff+ 복원\n          ↓\n연속 z·Stuff+ + ±0.5σ 등급</div>"),
     ]
     body = "".join(f"<section><h2>{title}</h2>{content}</section>" for title, content in sections)
     html_path.write_text(f"<!doctype html><html lang='ko'><head><meta charset='utf-8'><title>Hybrid Stuff+ Report</title><style>{css}</style></head><body><h1>공통·선수별 하이브리드 Stuff+ 예측</h1><p>{metadata['generated_at']}</p>{body}</body></html>", encoding="utf-8")
@@ -388,7 +437,9 @@ def main() -> None:
     print("Preparing fixed 2025 test fold...", flush=True)
     final_fold = prepare_fold(bundle.outings, FINAL_YEAR, train_start=2020, evaluation_split="test")
     final_data = prepare_hybrid_fold_data(final_fold)
-    predictions = {"ewma": predict_ewma_fold(final_fold)}
+    predictions = {
+        "ewma": reclassify_player_z(predict_ewma_fold(final_fold), final_data)
+    }
     ridge_prediction, ridge_models = predict_hybrid_tabular(final_data, winners["ridge"])
     xgb_prediction, _ = predict_hybrid_tabular(final_data, winners["xgboost"])
     predictions["hybrid_ridge"] = ridge_prediction
@@ -415,16 +466,23 @@ def main() -> None:
     ])
     direct_comparison = common[["model", "accuracy", "balanced_accuracy"]].merge(
         continuous[["model", "mae", "rmse"]], on="model", how="left"
-    ).assign(approach="direct_stuff_plus_with_ewma_feature")
+    ).assign(approach="player_zscore_direct_with_ewma_z_feature")
     prior_dir = Path("experiments/runs/hybrid_common_individual_2020_2025")
-    prior_common_path = prior_dir / "metrics_common.csv"
-    prior_continuous_path = prior_dir / "metrics_continuous.csv"
-    if prior_common_path.exists() and prior_continuous_path.exists():
-        prior_common = pd.read_csv(prior_common_path)
-        prior_continuous = pd.read_csv(prior_continuous_path)
+    prior_prediction_path = prior_dir / "predictions_2025.parquet"
+    if prior_prediction_path.exists():
+        prior_all = pd.read_parquet(prior_prediction_path)
+        prior_predictions = {
+            model: reclassify_player_z(group.drop(columns="report_model"), final_data)
+            for model, group in prior_all.groupby("report_model", sort=False)
+        }
+        prior_common, _ = evaluate_common_and_deployable(prior_predictions)
+        prior_continuous = pd.DataFrame([
+            {"model": model, **continuous_metrics(frame)}
+            for model, frame in prior_predictions.items()
+        ])
         prior_comparison = prior_common[["model", "accuracy", "balanced_accuracy"]].merge(
             prior_continuous[["model", "mae", "rmse"]], on="model", how="left"
-        ).assign(approach="ewma_plus_0.1_residual")
+        ).assign(approach="ewma_plus_0.1_residual_reclassified_at_half_sigma")
         comparison = pd.concat(
             [prior_comparison, direct_comparison], ignore_index=True, sort=False
         )

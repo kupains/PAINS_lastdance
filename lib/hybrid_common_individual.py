@@ -28,7 +28,6 @@ from lib.shared_tcn import (
     torch,
 )
 from lib.stuff_experiment import PreparedFold
-from lib.stuff_tabular import classify_stuff_plus_rows
 
 
 COMMON_SEQUENCE_FEATURES = (
@@ -46,6 +45,7 @@ COMMON_SEQUENCE_FEATURES = (
     "breaking_share",
     "offspeed_share",
 )
+ZSCORE_CLASS_BOUNDARY = 0.5
 
 # Raw values are read only from games strictly before the prediction target.
 # release_pos_y is intentionally included although the locked models omit it.
@@ -167,8 +167,10 @@ class HybridFoldData:
     evaluation_common_tabular: np.ndarray
     train_ewma_feature: np.ndarray
     evaluation_ewma_feature: np.ndarray
-    target_mean: float
-    target_scale: float
+    train_target_mean: np.ndarray
+    evaluation_target_mean: np.ndarray
+    train_target_scale: np.ndarray
+    evaluation_target_scale: np.ndarray
     train_individual_tabular: np.ndarray
     evaluation_individual_tabular: np.ndarray
     train_pitcher_index: np.ndarray
@@ -339,25 +341,39 @@ def prepare_hybrid_fold_data(
     evaluation_common_tabular = sequence_summary(
         evaluation_common_sequence, evaluation_batch.valid_timestep
     )
+    pitcher_target_stats = train_targets.groupby("pitcher", sort=True)["stuff_plus"].agg(
+        target_mean="mean", target_scale=lambda values: values.std(ddof=0)
+    )
+    pooled_target_scale = float(
+        pd.to_numeric(train_targets["stuff_plus"], errors="coerce").std(ddof=0)
+    )
+    pitcher_target_stats["target_scale"] = (
+        pd.to_numeric(pitcher_target_stats["target_scale"], errors="coerce")
+        .where(lambda values: values > 1e-8, pooled_target_scale)
+        .fillna(pooled_target_scale if pooled_target_scale > 1e-8 else 1.0)
+    )
+    train_target_mean = train_targets["pitcher"].map(
+        pitcher_target_stats["target_mean"]
+    ).to_numpy(dtype=np.float32)
+    evaluation_target_mean = evaluation_targets["pitcher"].map(
+        pitcher_target_stats["target_mean"]
+    ).to_numpy(dtype=np.float32)
+    train_target_scale = train_targets["pitcher"].map(
+        pitcher_target_stats["target_scale"]
+    ).to_numpy(dtype=np.float32)
+    evaluation_target_scale = evaluation_targets["pitcher"].map(
+        pitcher_target_stats["target_scale"]
+    ).to_numpy(dtype=np.float32)
     train_ewma_raw = pd.to_numeric(train_targets["ewma4"], errors="coerce").to_numpy(float)
     evaluation_ewma_raw = pd.to_numeric(
         evaluation_targets["ewma4"], errors="coerce"
     ).to_numpy(float)
-    ewma_mean = float(np.nanmean(train_ewma_raw))
-    ewma_scale = float(np.nanstd(train_ewma_raw))
-    if not np.isfinite(ewma_scale) or ewma_scale <= 1e-8:
-        ewma_scale = 1.0
-    train_ewma_feature = ((train_ewma_raw - ewma_mean) / ewma_scale).astype(np.float32)
-    evaluation_ewma_feature = (
-        (evaluation_ewma_raw - ewma_mean) / ewma_scale
+    train_ewma_feature = (
+        (train_ewma_raw - train_target_mean) / train_target_scale
     ).astype(np.float32)
-    train_target_raw = pd.to_numeric(
-        train_targets["stuff_plus"], errors="coerce"
-    ).to_numpy(float)
-    target_mean = float(np.nanmean(train_target_raw))
-    target_scale = float(np.nanstd(train_target_raw))
-    if not np.isfinite(target_scale) or target_scale <= 1e-8:
-        target_scale = 1.0
+    evaluation_ewma_feature = (
+        (evaluation_ewma_raw - evaluation_target_mean) / evaluation_target_scale
+    ).astype(np.float32)
     train_common_tabular = np.concatenate(
         [train_common_tabular, train_ewma_feature[:, None]], axis=1
     )
@@ -414,8 +430,10 @@ def prepare_hybrid_fold_data(
         evaluation_common_tabular=evaluation_common_tabular,
         train_ewma_feature=train_ewma_feature,
         evaluation_ewma_feature=evaluation_ewma_feature,
-        target_mean=target_mean,
-        target_scale=target_scale,
+        train_target_mean=train_target_mean,
+        evaluation_target_mean=evaluation_target_mean,
+        train_target_scale=train_target_scale,
+        evaluation_target_scale=evaluation_target_scale,
         train_individual_tabular=train_individual_tabular,
         evaluation_individual_tabular=evaluation_individual_tabular,
         train_pitcher_index=train_pitcher_index,
@@ -472,8 +490,10 @@ def _new_tabular_estimator(config: HybridTabularConfig, *, individual: bool):
 
 def _prediction_frame(
     targets: pd.DataFrame,
-    predicted_stuff_plus: np.ndarray,
+    predicted_z: np.ndarray,
     *,
+    target_mean: np.ndarray,
+    target_scale: np.ndarray,
     model: str,
     candidate_id: str,
     global_prediction: np.ndarray,
@@ -486,22 +506,43 @@ def _prediction_frame(
     ]
     result = targets[keep].copy().reset_index(drop=True)
     result["true_stuff_plus"] = pd.to_numeric(result["stuff_plus"], errors="coerce")
+    result["player_train_mean"] = np.asarray(target_mean, dtype=float)
+    result["player_train_std"] = np.asarray(target_scale, dtype=float)
+    result["true_z"] = (
+        result["true_stuff_plus"] - result["player_train_mean"]
+    ) / result["player_train_std"]
+    result["true_class"] = np.select(
+        [result["true_z"] < -ZSCORE_CLASS_BOUNDARY,
+         result["true_z"] > ZSCORE_CLASS_BOUNDARY],
+        [0, 2], default=1,
+    ).astype(int)
     result["true_residual"] = result["true_stuff_plus"] - pd.to_numeric(
         result["ewma4"], errors="coerce"
     )
-    result["global_prediction"] = np.asarray(global_prediction, dtype=float)
+    result["global_z"] = np.asarray(global_prediction, dtype=float)
+    result["pitcher_z_correction"] = np.asarray(individual_correction, dtype=float)
+    result["predicted_z"] = np.asarray(predicted_z, dtype=float)
+    result["global_prediction"] = (
+        result["player_train_mean"] + result["player_train_std"] * result["global_z"]
+    )
     result["global_residual"] = result["global_prediction"] - pd.to_numeric(
         result["ewma4"], errors="coerce"
     )
-    result["pitcher_correction"] = np.asarray(individual_correction, dtype=float)
-    result["predicted_stuff_plus"] = np.asarray(predicted_stuff_plus, dtype=float)
+    result["pitcher_correction"] = (
+        result["player_train_std"] * result["pitcher_z_correction"]
+    )
+    result["predicted_stuff_plus"] = (
+        result["player_train_mean"] + result["player_train_std"] * result["predicted_z"]
+    )
     result["predicted_residual"] = (
         result["predicted_stuff_plus"]
         - pd.to_numeric(result["ewma4"], errors="coerce")
     )
-    result["predicted_class"] = classify_stuff_plus_rows(
-        result["predicted_stuff_plus"], result["q33"], result["q67"]
-    )
+    result["predicted_class"] = np.select(
+        [result["predicted_z"] < -ZSCORE_CLASS_BOUNDARY,
+         result["predicted_z"] > ZSCORE_CLASS_BOUNDARY],
+        [0, 2], default=1,
+    ).astype(int)
     result["model"] = model
     result["candidate_id"] = candidate_id
     result["feature_eligible"] = np.isfinite(result["predicted_stuff_plus"])
@@ -514,9 +555,12 @@ def predict_hybrid_tabular(
     config: HybridTabularConfig | Mapping[str, Any] | None = None,
 ) -> tuple[pd.DataFrame, dict[str, Any]]:
     cfg = config if isinstance(config, HybridTabularConfig) else HybridTabularConfig(**dict(config or {}))
-    y = pd.to_numeric(
-        fold_data.train_targets["stuff_plus"], errors="coerce"
-    ).to_numpy(dtype=float)
+    y = (
+        pd.to_numeric(
+            fold_data.train_targets["stuff_plus"], errors="coerce"
+        ).to_numpy(dtype=float)
+        - fold_data.train_target_mean
+    ) / fold_data.train_target_scale
     global_model = _new_tabular_estimator(cfg, individual=False)
     global_model.fit(
         fold_data.train_common_tabular,
@@ -543,14 +587,16 @@ def predict_hybrid_tabular(
         individual_models[int(pitcher_index)] = model
     total = global_eval + individual_eval
     candidate = (
-        f"hybrid_{cfg.model}_direct_ewma_l{cfg.sequence_length}_"
+        f"hybrid_{cfg.model}_player_zscore_l{cfg.sequence_length}_"
         f"common{fold_data.train_common_tabular.shape[1]}_"
         f"individual{fold_data.train_individual_tabular.shape[1]}"
     )
     prediction = _prediction_frame(
         fold_data.evaluation_targets,
         total,
-        model=f"hybrid_{cfg.model}_direct_ewma",
+        target_mean=fold_data.evaluation_target_mean,
+        target_scale=fold_data.evaluation_target_scale,
+        model=f"hybrid_{cfg.model}_player_zscore",
         candidate_id=candidate,
         global_prediction=global_eval,
         individual_correction=individual_eval,
@@ -636,13 +682,13 @@ def fit_predict_hybrid_tcn(
     train_ewma = _tensor(
         fold_data.train_ewma_feature, dtype=torch.float32, device=device
     )
-    true_stuff_plus_standardized = _tensor(
+    true_player_z = _tensor(
         (
             pd.to_numeric(
             fold_data.train_targets["stuff_plus"], errors="coerce"
             ).to_numpy(dtype=np.float32)
-            - fold_data.target_mean
-        ) / fold_data.target_scale,
+            - fold_data.train_target_mean
+        ) / fold_data.train_target_scale,
         dtype=torch.float32,
         device=device,
     )
@@ -666,7 +712,7 @@ def fit_predict_hybrid_tcn(
             train_ewma,
         )
         row_loss = F.huber_loss(
-            predicted, true_stuff_plus_standardized,
+            predicted, true_player_z,
             reduction="none", delta=cfg.huber_delta
         )
         residual_loss = pitcher_balanced_mean(row_loss, train_pitcher)
@@ -713,23 +759,20 @@ def fit_predict_hybrid_tcn(
             eval_stuff,
             eval_ewma,
         )
-    global_np = (
-        fold_data.target_mean
-        + fold_data.target_scale * global_prediction.cpu().numpy()
-    )
-    individual_np = fold_data.target_scale * individual.cpu().numpy()
-    predicted_np = (
-        fold_data.target_mean + fold_data.target_scale * predicted.cpu().numpy()
-    )
+    global_np = global_prediction.cpu().numpy()
+    individual_np = individual.cpu().numpy()
+    predicted_np = predicted.cpu().numpy()
     candidate = (
-        f"hybrid_tcn_direct_ewma_standardized_l{cfg.sequence_length}_c{cfg.internal_channels}_b"
+        f"hybrid_tcn_player_zscore_l{cfg.sequence_length}_c{cfg.internal_channels}_b"
         f"{cfg.bottleneck_dim}_l2{cfg.individual_l2:g}_"
         f"individual{fold_data.train_individual_tabular.shape[1]}"
     )
     prediction = _prediction_frame(
         fold_data.evaluation_targets,
         predicted_np,
-        model="hybrid_tcn_direct_ewma",
+        target_mean=fold_data.evaluation_target_mean,
+        target_scale=fold_data.evaluation_target_scale,
+        model="hybrid_tcn_player_zscore",
         candidate_id=candidate,
         global_prediction=global_np,
         individual_correction=individual_np,
