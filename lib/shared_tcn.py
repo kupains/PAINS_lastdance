@@ -187,6 +187,7 @@ def build_tcn_sequences(
     history_eligible_col: str = "history_eligible",
     target_eligible_col: str = "target_eligible",
     preprocessor: "TCNPreprocessor | None" = None,
+    allow_all_pitch_features: bool = False,
 ) -> TCNSequenceBatch:
     """Build strictly-prior, cross-season sequences with deterministic left padding.
 
@@ -201,8 +202,9 @@ def build_tcn_sequences(
     missing_features = [column for column in features if column not in history_df]
     if missing_features:
         raise ValueError(f"Missing TCN raw features: {missing_features}")
-    if "release_speed" in features or any(
-        name.endswith(("_ma5", "_slope5")) for name in features
+    if not allow_all_pitch_features and (
+        "release_speed" in features
+        or any(name.endswith(("_ma5", "_slope5")) for name in features)
     ):
         raise ValueError(
             "TCN raw sequences cannot include all-pitch release_speed or rolling/slope features."
